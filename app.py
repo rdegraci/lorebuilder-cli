@@ -13,6 +13,7 @@ import uuid
 import json
 import random
 import traceback   # [fix 4] Add import for traceback for debug reporting.
+import re
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -196,11 +197,11 @@ def add_or_update_location_entry(location_id, display_name, description, exits, 
         "location_id": location_id,
         "display_name": display_name,
         "description": description,
-        "exits": exits_list,
+        "exits": json.dumps(exits_list),
         "created_by": created_by,
         "timestamp": timestamp,
         "canonical": canonical,
-        "tags": tags or [],
+        "tags": json.dumps(tags or []),
     }
     # ChromaDB can only filter on a single field/operator in 'where'; only use 'metadata.location_id'
     results = collection.query(
@@ -422,53 +423,183 @@ def generate_location_description_and_exits(display_name, additional_context=Non
     return desc.strip(), exits
 
 
-def look(character_name):
-    """Handles the /look command, showing the current scene and exits for the character.
 
-    This function retrieves or creates the current location and sets last_look_result.
-
-    Args:
-        character_name (str): The character/session identifier.
+def infer_location_from_chat(character_name, limit=20):
+    """
+    Attempts to infer the current location for a character by scanning their recent chat history.
 
     Returns:
-        dict: Information about the location including description, display_name, exits, location_id.
+        dict: { 'location_name': str, 'excerpt': str, 'match_type': str }
+        or None if not found.
     """
-    location_id, display_name = assign_or_get_current_location(character_name)
-    # Try to get canonical lore for this location from ChromaDB
-    lore_entry = get_location_lore_from_chromadb(location_id)
-    if lore_entry:
-        description = lore_entry.get("description", "")
-        exits = lore_entry.get("exits", [])
-        if isinstance(exits, str):
-            try:
-                exits = json.loads(exits)
-            except Exception:
-                exits = [exits]
-    else:
-        # Try to get any local lore for location
-        entry = get_location_entry(location_id)
-        description = entry["description"] if entry and entry["description"] else None
-        exits = entry["exits"] if entry and entry["exits"] else []
-        if not description or not exits:
-            description, exits = generate_location_description_and_exits(display_name)
-    # [fix 2] Guarantee description is always a string and exits always a non-empty list of strings for downstream safety.
-    if description is None or not isinstance(description, str) or not description.strip():
-        description = "This place seems indescribable. You sense its presence but its details escape you."
-    else:
-        description = description.strip()
-    if exits is None or not isinstance(exits, list) or not exits or not any([str(e).strip() for e in exits]):
-        exits = ['Unknown']
-    else:
-        exits = [str(e).strip() for e in exits if str(e).strip()]
-    # END fix 2
-    location_info = {
-        "location_id": location_id,
-        "display_name": display_name,
-        "description": description,
-        "exits": exits
-    }
+    session_id = chat_history.get_or_create_session(character_name)
+    hist = chat_history.get_history(session_id, limit=limit)
+    # Recentest first
+    # Compile common patterns for arrival/movement/location
+    enter_patterns = [
+        # Explicit entry
+        r"\b(?:you|i)\s+(?:enter|arrive at|walk into|step into|go into|head to|step inside|walk in(?:to)?|move into|explore|reach|emerge into|find yourself in)\s+the\s+([A-Z][a-zA-Z0-9' \-]+)[\.!\n]?",
+        r"\b(?:in|inside|at|within|through)\s+the\s+([A-Z][a-zA-Z0-9' \-]+)[\.!\n]?",
+        r"\bnow\s+(?:in|at|inside)\s+the\s+([A-Z][a-zA-Z0-9' \-]+)[\.!\n]?",
+        r"\b(?:location|place|room)[: ]+([A-Z][a-zA-Z0-9' \-]+)[\.!\n]?",
+        r"You are in the ([A-Z][a-zA-Z0-9' \-]+)[\.!\n]?",
+        r"Current location[:\- ]+([A-Z][a-zA-Z0-9' \-]+)[\.!\n]?",
+        r"They (?:enter|arrive at|step into|reach) the ([A-Z][a-zA-Z0-9' \-]+)[\.!\n]?"
+    ]
+    for idx in range(len(hist)-1, -1, -1):
+        role, msg = hist[idx]
+        # We check LLM/character responses, not user questions
+        if role != "character":
+            continue
+        for pat in enter_patterns:
+            m = re.search(pat, msg, flags=re.IGNORECASE)
+            if m:
+                loc = m.group(1).strip()
+                return {'location_name': loc, 'excerpt': msg, 'match_type': 'regex'}
+        # Fallback: look for "You are in ..." and similar
+        fallback_pat = r"\bYou are (?:now )?(?:in|at|inside|within) (the )?([A-Z][a-zA-Z0-9' \-]+)[\.!\n]?"
+        m2 = re.search(fallback_pat, msg, flags=re.IGNORECASE)
+        if m2:
+            loc = m2.group(2).strip()
+            return {'location_name': loc, 'excerpt': msg, 'match_type': 'fallback'}
+    return None
+
+def find_location_entry_by_display_name(display_name):
+    """
+    Searches the location_entries table for an entry with the given display_name.
+    Returns: (location_id, display_name) or None.
+    """
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("SELECT location_id, display_name FROM location_entries WHERE LOWER(display_name) = ?", (display_name.lower(),))
+    row = c.fetchone()
+    conn.close()
+    if row:
+        return row[0], row[1]
+    return None
+
+def lore_context_for_character(character_name, limit=30):
+    """
+    Collects recent lore (from chat history and chroma) for context.
+    """
+    session_id = chat_history.get_or_create_session(character_name)
+    hist = chat_history.get_history(session_id, limit=limit)
+    context_msgs = []
+    for role, msg in hist:
+        if role == "character" or role == "user":
+            context_msgs.append(msg)
+    # Also retrieve chromadb results for the character's name
+    lore_chunks = retrieve_lore(character_name, top_k=3)
+    return "\n".join(context_msgs + lore_chunks)
+
+def look(character_name):
+    """Handles the /look command: infers/generates and displays current location for the character.
+
+    Sequence:
+    - Try to infer from chat ("You enter the X...").
+    - If found and location known in DB, display (and set as current).
+    - If found and not in DB, create/record, generate scene.
+    - If not inferred from chat, try stored mapping (character_location).
+    - If still none, generate plausible new location via LLM with context.
+    - Display result, showing what led to selection.
+    """
+    location_info = None
     global last_look_result
+    explanation = ""
+    inferred = infer_location_from_chat(character_name, limit=25)
+    rationale = None
+
+    if inferred and 'location_name' in inferred and inferred['location_name']:
+        # Try to find this location in DB
+        match = find_location_entry_by_display_name(inferred['location_name'])
+        if match:
+            location_id, display_name = match
+            update_character_location(character_name, location_id)
+            entry = get_location_entry(location_id)
+            description = entry["description"] if entry and entry["description"] else None
+            exits = entry["exits"] if entry and entry["exits"] else []
+            # [fix 2] Apply safety
+            if description is None or not isinstance(description, str) or not description.strip():
+                description = "This place seems indescribable. You sense its presence but its details escape you."
+            else:
+                description = description.strip()
+            if exits is None or not isinstance(exits, list) or not exits or not any([str(e).strip() for e in exits]):
+                exits = ['Unknown']
+            else:
+                exits = [str(e).strip() for e in exits if str(e).strip()]
+            location_info = {
+                "location_id": location_id,
+                "display_name": display_name,
+                "description": description,
+                "exits": exits,
+                "_inferred": True
+            }
+            explanation = f"Inferred current location from recent chat message:\n  [dim]{inferred['excerpt'].strip()}[/dim]"
+        else:
+            # New location, not in DB
+            display_name = inferred['location_name']
+            location_id = str(uuid.uuid4())
+            desc, exits = generate_location_description_and_exits(display_name, additional_context=None)
+            add_or_update_location_entry(location_id, display_name, desc, exits, canonical=True, created_by="inferred_chat", tags=["scene"])
+            update_character_location(character_name, location_id)
+            location_info = {
+                "location_id": location_id,
+                "display_name": display_name,
+                "description": desc,
+                "exits": exits,
+                "_inferred": True
+            }
+            explanation = f"Inferred a new location from your recent chat message (not seen before):\n  [dim]{inferred['excerpt'].strip()}[/dim]"
+    else:
+        # No inference from chat; check existing
+        location_id, display_name = assign_or_get_current_location(character_name)
+        lore_entry = get_location_lore_from_chromadb(location_id)
+        if lore_entry:
+            description = lore_entry.get("description", "")
+            exits = lore_entry.get("exits", [])
+            if isinstance(exits, str):
+                try:
+                    exits = json.loads(exits)
+                except Exception:
+                    exits = [exits]
+        else:
+            entry = get_location_entry(location_id)
+            description = entry["description"] if entry and entry["description"] else None
+            exits = entry["exits"] if entry and entry["exits"] else []
+            if not description or not exits:
+                # Try: context-driven generation from summary of recent chat
+                context = lore_context_for_character(character_name, limit=40)
+                # Optionally include character's name for context
+                prompt_context = f"Player actions:\n{context}" if context else ""
+                desc, exits = generate_location_description_and_exits(display_name, additional_context=prompt_context)
+        # [fix 2]
+        if description is None or not isinstance(description, str) or not description.strip():
+            description = "This place seems indescribable. You sense its presence but its details escape you."
+        else:
+            description = description.strip()
+        if exits is None or not isinstance(exits, list) or not exits or not any([str(e).strip() for e in exits]):
+            exits = ['Unknown']
+        else:
+            exits = [str(e).strip() for e in exits if str(e).strip()]
+        location_info = {
+            "location_id": location_id,
+            "display_name": display_name,
+            "description": description,
+            "exits": exits,
+            "_inferred": False
+        }
+        # Explanation for context generation
+        if not description or description == "This place seems indescribable. You sense its presence but its details escape you.":
+            rationale = f"No recent chat messages gave a location; generated generic scene."
+        elif context:
+            rationale = f"No recent chat mention of location. Scene generated from recent gameplay context."
+        else:
+            rationale = f"Restored your last known location from records."
+        explanation = rationale
+
     last_look_result = location_info
+    # Attach explanation for output
+    location_info["_explanation"] = explanation
     return location_info
 
 def save_look(character_name):
@@ -584,6 +715,8 @@ def chat_loop():
             rprint(f"{scene_info['description']}")
             if scene_info['exits']:
                 rprint(f"[bold white]Exits:[/bold white] " + ", ".join(scene_info['exits']))
+            if "_explanation" in scene_info and scene_info["_explanation"]:
+                rprint(f"[dim][Reason:] {scene_info['_explanation']}[/dim]")
             last_look_result = scene_info
     except Exception as e:
         # Ignore if table empty or on error
@@ -640,6 +773,8 @@ def chat_loop():
                 rprint(f"{scene_info['description']}")
                 if scene_info['exits']:
                     rprint(f"[bold white]Exits:[/bold white] " + ", ".join(scene_info['exits']))
+                if "_explanation" in scene_info and scene_info["_explanation"]:
+                    rprint(f"[dim][Reason:] {scene_info['_explanation']}[/dim]")
                 last_look_result = scene_info
             except Exception as e:
                 # [fix 3] Show the traceback for easier debugging if an exception occurs in /look
