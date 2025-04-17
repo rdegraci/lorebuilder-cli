@@ -148,8 +148,8 @@ def chat_loop():
                 rprint(f"[grey]No history for '{char_name}'.")
             else:
                 for i, (role, msg) in enumerate(hist, 1):
-                    who = "[bold yellow]You" if role == 'user' else f"[bold magenta]{char_name}"
-                    rprint(f"{who}:[/bold] {msg}")
+                    who = "[bold yellow]You[/bold yellow]" if role == 'user' else f"[bold magenta]{char_name}[/bold magenta]"
+                    rprint(f"{who}: {msg}")
         else:
             rprint("[red]Unknown command.")
 
