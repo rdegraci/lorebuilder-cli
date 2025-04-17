@@ -3,4 +3,6 @@
 *.yaml
 logs
 chromadb
+__pycache__
+*.db
 
