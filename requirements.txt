@@ -1,0 +1,5 @@
+chromadb
+litellm
+rich
+python-dotenv
+yaml
