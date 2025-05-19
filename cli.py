@@ -1,3 +1,4 @@
+
 """
 cli.py
 
@@ -10,6 +11,7 @@ from rich import print as rprint
 import traceback
 from commands import COMMANDS_REGISTRY
 import locations
+from help import print_banner, print_command_menu, print_command_help
 
 
 def start_cli(context):
@@ -19,14 +21,8 @@ def start_cli(context):
     Args:
         context (dict): Shared state and module references needed for command handlers.
     """
-    rprint("[bold cyan]╔═════════════════════════════════════════════════════════╗")
-    rprint("[bold cyan]║            LoreBuilder CLI - World Builder              ║")
-    rprint("[bold cyan]╚═════════════════════════════════════════════════════════╝")
-    rprint("[bold cyan]Available Commands:")
-    rprint("[cyan]Lore: [white]add_lore, generate_lore, store_generated_lore, query_lore, list_all_lore, delete_lore")
-    rprint("[cyan]Navigation: [white]look, save_look, go <direction>, reset_location, history")
-    rprint("[cyan]Characters: [white]chat_as <character> <message>, reset <character>")
-    rprint("[cyan]System: [white]exit")
+    print_banner()
+    print_command_menu()
     
     # At script start: show last location for last-used character (if any)
     try:
@@ -58,20 +54,33 @@ def start_cli(context):
             cmd = input(">> ").strip()
             if cmd == "exit":
                 break
-            
+
             tokens = cmd.split()
             if not tokens:
                 continue
-                
+
             command = tokens[0]
             args = tokens[1:] if len(tokens) > 1 else []
-            
+
             # Handle commands with or without leading slash
             canonical_command = command.lstrip('/')
-            
+
+            # Help command support
+            if canonical_command == "help":
+                if not args:
+                    print_command_menu()
+                else:
+                    cmd_to_help = args[0]
+                    handler = COMMANDS_REGISTRY.get(cmd_to_help)
+                    if handler:
+                        print_command_help(cmd_to_help, handler)
+                    else:
+                        rprint(f"[red]No help found: unknown command '{cmd_to_help}'.")
+                continue
+
             # Find the handler in the registry
             handler = COMMANDS_REGISTRY.get(canonical_command)
-            
+
             if handler:
                 handler(args, context)
             else:
@@ -79,3 +88,5 @@ def start_cli(context):
         except Exception as e:
             traceback.print_exc()
             rprint(f"[red]Error processing command: {str(e)}")
+
+
