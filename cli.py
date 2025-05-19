@@ -12,14 +12,16 @@ import traceback
 from commands import COMMANDS_REGISTRY
 import locations
 from help import print_banner, print_command_menu, print_command_help
+from cli_utils import cli_error, cli_warn, cli_info, cli_success  # centralized messaging
 
 
-def start_cli(context):
+def start_cli(context, verbose=False):
     """
     Start the interactive CLI loop.
 
     Args:
         context (dict): Shared state and module references needed for command handlers.
+        verbose (bool): Enable verbose output (prints tracebacks and debug if True).
     """
     print_banner()
     print_command_menu()
@@ -45,9 +47,9 @@ def start_cli(context):
             context['last_look_result'] = scene_info
     except Exception as e:
         # Ignore if table empty or on error
-        rprint(f"[dim]Note: {str(e)}[/dim]")
+        cli_warn(f"Note: {str(e)}")
     
-    rprint("[cyan]Ready! Enter commands below:[/cyan]")
+    cli_info("Ready! Enter commands below:")
     
     while True:
         try:
@@ -75,7 +77,7 @@ def start_cli(context):
                     if handler:
                         print_command_help(cmd_to_help, handler)
                     else:
-                        rprint(f"[red]No help found: unknown command '{cmd_to_help}'.")
+                        cli_error(f"No help found: unknown command '{cmd_to_help}'.")
                 continue
 
             # Find the handler in the registry
@@ -84,9 +86,10 @@ def start_cli(context):
             if handler:
                 handler(args, context)
             else:
-                rprint(f"[red]Unknown command: {command}. Type a command from the list above.")
+                cli_error(f"Unknown command: {command}. Type a command from the list above.")
         except Exception as e:
-            traceback.print_exc()
-            rprint(f"[red]Error processing command: {str(e)}")
+            if verbose:
+                traceback.print_exc()
+            cli_error(f"Error processing command: {str(e)}")
 
 
