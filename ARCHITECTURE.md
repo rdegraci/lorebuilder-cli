@@ -16,46 +16,57 @@ This document targets code reviewers needing a high-level and practical grasp of
 - **Location/Scene System:** Dual-persistence design: relational (SQLite tables: `character_location`, `location_entries`) for session/canonical tracking, and vector (ChromaDB) for flexible, semantic lore lookup.
 - **LLM-driven Assignment:** When spawning new characters, context-aware LLM selects (or generates) location assignments, falling back to random canonical sites if needed.
 - **Scene Lore Canonicalization:** Scenes and exits can be permanently 'saved' or indexed for canonical or non-canonical retrieval.
-- **Interactive CLI:** Command loop enables scene navigation, lore addition, chat overview, replay, and migration/testing workflows.
+- **Interactive CLI:** Modular command registry, help, and error systems allow rapid CLI evolution, scene navigation, lore addition, chat, and world inspection.
 
 ---
 
 ## 2. Components Overview
 
-### 2.1. Chat History (`chat_history.py`)
-- Each CLI user/character pair has its own session history in SQLite.
-- System enables session replay, deletion, and automatic log updating on every user/LLM exchange.
-- Chat entries include role, text, timestamp, and relevant location/session.
+### 2.1. Initialization (`bootstrap.py`)
+- Handles configuration, environment loading, ChromaDB, embedding, database initialization, and module injection in a single place.
+- Entry point for bootstrapping the application before handing off to the CLI loop.
 
-### 2.2. Location Management
-- **Relational Layer:** Tracks canonical scenes, locations, and their mapping to sessions/users. Includes schema for location names, canonical status, and associated exits.
-- **Semantic Lore Layer:** Canonical/non-canonical descriptions and exits are stored with embeddings in ChromaDB—allowing flexible, vector-based retrieval for scene recall/expansion.
+### 2.2. CLI Loop & Parsing (`cli.py`)
+- Orchestrates user interaction, command input, context management, and handler dispatch.
+- Leverages a centralized command registry for extensibility.
+- Handles only the CLI UI—separated from all domain logic.
 
-### 2.3. LLM Orchestration
-- Location assignment is handled by LLM (with lore/context seed), with fallback logic to canonical/random location list.
-- Dialogue continues based on per-character history/context.
-- `/save_look` and similar commands trigger save/query workflows coupling CLI, SQLite, and ChromaDB.
+### 2.3. Banner/Help/Menu (`help.py`)
+- Renders the CLI ASCII banner, command listing, and per-command help from handler docstrings.
+- Shows dynamic help based on the command registry (`help`/`help <command>` commands).
 
-### 2.4. CLI Experience (`app.py`)
-- Supports enhanced lore bootstrapping, history navigation, and in-world chat via command loop.
-- Integrates migration and test touchpoints for database and vector store evolution.
+### 2.4. Centralized CLI Output (`cli_utils.py`)
+- Ensures consistent, branded output for error, success, warning, and info messages.
+- Provides reusable helpers for all user-facing CLI messaging with styling.
+
+### 2.5. Command Registry (`commands/` directory)
+- Directory of modular, single-responsibility command handlers.
+- `commands/__init__.py` builds the `COMMANDS_REGISTRY` mapping command names to handlers.
+- Enables drop-in addition or updating of user-available CLI commands.
+
+### 2.6. Lore Handling (`lore.py`), Location Logic (`locations.py`), NPCs, Chat (`chat_history.py`)
+- Each core feature is modular and initialized via shared resources from the bootstrap context.
+- Lore and locations are persistent, LLM/embedding enhanced, and support both relational and vector-based querying.
 
 ---
 
 ## 3. Data & Workflow Outline
 
-- **Bootstrapping a World/Session:** Loads canonical locations and lore. Optionally generates locations/scenes via LLM if missing.
+- **Bootstrapping a World/Session:** Uses `bootstrap.py` to prepare config, ChromaDB, embedding, chat DB, and all feature modules.
+- **CLI Launch:** `app.py` simply calls `initialize_app()` (bootstrap) and `start_cli(context)` (CLI loop).
+- **User Command Handling:** All commands are parsed and dispatched dynamically from the registry. Help and messaging are standardized.
 - **Chat/Session Persistence:** Every exchange (user or LLM) is logged in `chat_history.db` and can be replayed.
-- **Location Query/Update:** On scene changes, updates both relational mapping and optionally generates vector-based lore/description.
-- **Scene Saving:** `/save_look` invokes context-aware save to both SQLite (as canonical/non-canonical scene) and vector DB.
+- **Location Query/Update:** Scene changes update both relational and vector mapping.
+- **Scene Saving:** Lore and scene data are stored in both SQL and vector/embedding stores as appropriate.
 
 ---
 
 ## 4. Extensibility and Maintainability
 
-- All database schema changes are handled with built-in migration flows; new location/chat features are readily extendable.
-- Supports plug-and-play LLM “decision” logic for location assignment, context pruning, and lore seeding.
-- CLI loop designed for drop-in of new commands, including developer/testing/operator hooks.
+- The modular design supports new commands, output formats, or bootstrapping options without impact to mainline logic.
+- CLI output/messages and help are all centralized and can be themed or internationalized.
+- All modules are decoupled from the CLI and interact only through passed-in dependencies/context.
+- The command registry system ensures easy discovery and documentation.
 
 ---
 
@@ -71,11 +82,18 @@ This document targets code reviewers needing a high-level and practical grasp of
 
 ## 6. File/Schema Overview
 
-- `app.py` — CLI main loop, command parsing, session state
+- `app.py` — Minimal entrypoint, launches bootstrap then CLI
+- `bootstrap.py` — All configuration, env, embedding, vector DB, and module setup
+- `cli.py` — CLI input loop, command parsing, user interaction, and context control
+- `help.py` — Banner, command menu, and dynamic help utilities
+- `cli_utils.py` — Consistent output for error, warning, info, and success
+- `commands/` — Modular directory with individual CLI command handler modules and the global registry
+- `lore.py` — Lore/scene logic, embedding, LLM generation, and vector operations
+- `locations.py` — Location creaton/query/movement, canonical and non-canonical state tracking
+- `npcs.py` — Plausible NPC population for scenes
 - `chat_history.py` — SQLite multi-turn chat/session engine
-- `lore_chat_history.db` — Persistent multi-user/session chat and world state
-- `state.db` — Canonical/non-canonical scene & location mapping
-- `chromadb/` — Embedded lore and scene descriptions (embeddings, vector search)
+- `*.db` — Persistent chat/location/lore data (SQLite)
+- `chromadb/` — Vector/semantic lore descriptions (ChromaDB)
 - `ARCHITECTURE.md` — (This file)
 - `app.yaml` — Config (models, prompts, data paths)
 - `.env` — LLM and secret config
@@ -85,8 +103,8 @@ This document targets code reviewers needing a high-level and practical grasp of
 ## 7. Reviewer Notes
 - All persistent world, chat, and lore state is forward-migration safe and replayable.
 - Vector+relational hybrid enables fast semantic querying while retaining story/world integrity via canonical RDBMS state.
-- CLI includes utilities for inspecting, migrating, or extending the world model and session logs.
+- CLI output, help, and error handling are now modular and consistent across commands and workflows.
 - Guidance for LLM context/context pruning, rapid location assignment, and extensibility points is embedded in code comments.
 - See tests and command help for worked CLI/data examples.
 
-_This replaces historic RAG-centric summaries with explicit context about persistent memory, world chat, hybrid storage, and extensibility. Direct reviewer questions to code comments or the maintainer._
+_This document supersedes earlier summaries with details on the modular CLI, command registry, and centralized output architecture._
