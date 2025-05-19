@@ -10,7 +10,7 @@ A world-building CLI for persistent, replayable, and context-rich conversations.
 - **Location/Scene System:** Dual-layer canonical/non-canonical location entries combine SQL mapping and vector-embedded lore.
 - **LLM-driven Session Context:** Context-aware stories, location assignment, and lore bootstrapping.
 - **Semantic Search:** Retrieve, expand, or generate lore fragments using ChromaDB vector search for contextual richness.
-- **Extensible In-World CLI:** Navigation, saving canonical scenes, migrating/upgrading logic, and developer/test workflows.
+- **Extensible Modular CLI:** Modular commands, centralized help/menus, and consistent error/info output.
 - **Rich Terminal UX:** Colorful, user-friendly feedback powered by Rich.
 
 ---
@@ -40,17 +40,15 @@ python app.py
 
 ---
 
-## Core CLI Commands
+## Core CLI Usage
 
-- `add_lore <text>` — Store lore fragments or scene/place descriptions
-- `generate_lore <query>` — Expand lore using RAG+LLM
-- `store_generated_lore` — Save the last generated lore
-- `/save_look` — Canonicalize and embed current scene look/desc
-- `show_chat <character>` — View/replay character sessions
-- Scene and navigation commands (move, location assignment, etc.)
-- `exit` — Quit
-
-_See shell help or `ARCHITECTURE.md` for more._
+- Modular CLI with dynamic help: type `help` for commands, or `help <command>` for detailed docs.
+- Categories:
+  - **Lore:** `add_lore`, `generate_lore`, `store_generated_lore`, `query_lore`, `list_all_lore`, `delete_lore`
+  - **Navigation:** `look`, `save_look`, `go`, `reset_location`, `history`
+  - **Characters:** `chat_as`, `reset`
+  - **System:** `help`, `exit`
+- All commands and descriptions are auto-discovered from the command registry and module docstrings.
 
 ---
 
@@ -58,21 +56,26 @@ _See shell help or `ARCHITECTURE.md` for more._
 
 - **Session & Chat:** All character and user chats are stored in `lore_chat_history.db`.
 - **Location/Scene Tracking:** Locations and canonical states in `state.db` (SQLite). Scene/lore descriptions and exits in persisted ChromaDB vector store.
-- **Extensible Design:** Add new world/scene/character logic, migratable schema, and developer hooks for bootstrapping worlds or CLI-driven upgrades.
 
 ---
 
 ## File Structure
 
-- `app.py` — CLI entry, session orchestration, commands
-- `chat_history.py` — Chat persistence and replay logic
-- `lore_chat_history.db` — Persistent chat/session store
-- `state.db` — Canonical location/scene map
-- `chromadb/` — Vector search content (lore/scene embeddings)
-- `ARCHITECTURE.md` — Design & data-flow docs
-- `app.yaml` — LLM, embedding, and prompt config
-- `.env` — LLM API config (NEVER COMMIT)
-- `requirements.txt` — Dependencies
+- `app.py` — Minimal entry point (calls bootstrap then CLI)
+- `bootstrap.py` — Configuration, env, embedding, DB, and module setup
+- `cli.py` — Main CLI loop, user interaction, command dispatch
+- `help.py` — Banner/help/menu utilities and automatic command docs
+- `cli_utils.py` — Consistent output (error, warning, info, success)
+- `commands/` — One file per CLI command; registry for dispatch
+- `lore.py` — Lore/scene storage, embedding, and LLM integration
+- `locations.py` — Location logic, position/state management
+- `npcs.py` — NPC suggestion and world population
+- `chat_history.py` — SQLite multi-turn chat/session engine
+- `*.db` — Chat/location/lore state
+- `chromadb/` — Vector store for lore/scene
+- `app.yaml` — Configuration for LLM, embedding, etc
+- `.env` — LLM API config (**never commit!**)
+- `ARCHITECTURE.md` — System overview
 
 ---
 
@@ -89,16 +92,16 @@ _See shell help or `ARCHITECTURE.md` for more._
 
 ## Security & Best Practices
 
-- API keys in `.env`, **never** source code.
-- All state/world data migratable and forward-compatible.
-- Fast semantic search is paired with canonical relational world-model for full integrity.
+- API keys in `.env`, **never** in code.
+- Data is migratable and forward-compatible.
+- Semantic vector search is paired with relational model for integrity.
 
 ---
 
 ## Documentation & Help
 
-- **For full system design:** See [ARCHITECTURE.md](ARCHITECTURE.md)
-- **CLI commands:** Run `help` in the CLI or view code comments.
+- **For design/architecture:** See [ARCHITECTURE.md](ARCHITECTURE.md)
+- **For CLI commands:** Run `help` or `help <command>` inside the CLI.
 
 ---
 
