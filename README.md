@@ -1,17 +1,18 @@
+
 # LoreBuilder CLI
 
-A world-building CLI for persistent, replayable, and context-rich conversations. LoreBuilder uniquely combines Retrieval-Augmented Generation (RAG), vector search (ChromaDB), relational (SQLite) world tracking, and LLM-powered story expansion.
+A modular, persistent CLI for world-building and replayable, context-rich character conversations. Combines Retrieval-Augmented Generation (RAG), ChromaDB vector search, SQLite chat history, and LLM-powered story expansion within a robust, developer-friendly command framework.
 
 ---
 
 ## Features
 
-- **Multi-Turn Chat History:** All in-world conversations are sessioned, tracked, and replayable (SQLite).
-- **Location/Scene System:** Dual-layer canonical/non-canonical location entries combine SQL mapping and vector-embedded lore.
-- **LLM-driven Session Context:** Context-aware stories, location assignment, and lore bootstrapping.
-- **Semantic Search:** Retrieve, expand, or generate lore fragments using ChromaDB vector search for contextual richness.
-- **Extensible Modular CLI:** Modular commands, centralized help/menus, and consistent error/info output.
-- **Rich Terminal UX:** Colorful, user-friendly feedback powered by Rich.
+- **Persistent Multi-Turn Chat** – All conversations replayable via transactional SQLite logging.
+- **Semantic Lore Search** – Contextual retrieval via ChromaDB vector DB and modern embeddings.
+- **LLM-Driven Stories** – All generation/context managed via a master LoreService and LiteLLM.
+- **NLP-Powered Character Recognition** – Flexible, quoted, multi-word, and fuzzy chat with lore-synced character list, powered by spaCy/rapidfuzz.
+- **Modular Command Registry & Dynamic Help** – Only active commands appear in help/menus; per-command docs from handler docstrings.
+- **Rich Terminal UI** – User-centric, colorized feedback with Rich.
 
 ---
 
@@ -21,18 +22,18 @@ A world-building CLI for persistent, replayable, and context-rich conversations.
 
 ```bash
 pip install -r requirements.txt
+python -m spacy download en_core_web_sm
 ```
 
-### 2. Configure
+### 2. Configuration
 
-- Edit `app.yaml`: LLM models, embeddings, ChromaDB path, prompts, etc.
-- Add your LLM API key(s) to `.env`:
+- Edit `app.yaml` for LLM, embedding, ChromaDB path, prompts, etc.
+- Add your LLM API key in `.env` file (never commit this!):
   ```
   LLM_API_KEY=your-model-api-key-here
   ```
-- `.env` is in `.gitignore` by default.
 
-### 3. Run the CLI
+### 3. Launch
 
 ```bash
 python app.py
@@ -40,71 +41,69 @@ python app.py
 
 ---
 
-## Core CLI Usage
+## CLI Usage
 
-- Modular CLI with dynamic help: type `help` for commands, or `help <command>` for detailed docs.
+- Type `help` or `help <command>` for the auto-generated command list and documentation.
 - Categories:
   - **Lore:** `add_lore`, `generate_lore`, `store_generated_lore`, `query_lore`, `list_all_lore`, `delete_lore`
-  - **Navigation:** `look`, `save_look`, `go`, `reset_location`, `history`
-  - **Characters:** `chat_as`, `reset`
+  - **Characters:** `chat_as`, `list_characters`
   - **System:** `help`, `exit`
-- All commands and descriptions are auto-discovered from the command registry and module docstrings.
+- Only currently active, supported commands are listed.
 
 ---
 
 ## Persistent World Model
 
-- **Session & Chat:** All character and user chats are stored in `lore_chat_history.db`.
-- **Location/Scene Tracking:** Locations and canonical states in `state.db` (SQLite). Scene/lore descriptions and exits in persisted ChromaDB vector store.
+- **Chat:** All character and session logs in `lore_chat_history.db` (SQLite).
+- **Lore:** All scene, character, and context lore in ChromaDB vector storage; kept in sync with entity extraction for robust querying.
 
 ---
 
-## File Structure
+## Project Structure
 
-- `app.py` — Minimal entry point (calls bootstrap then CLI)
-- `bootstrap.py` — Configuration, env, embedding, DB, and module setup
-- `cli.py` — Main CLI loop, user interaction, command dispatch
-- `help.py` — Banner/help/menu utilities and automatic command docs
-- `cli_utils.py` — Consistent output (error, warning, info, success)
-- `commands/` — One file per CLI command; registry for dispatch
-- `lore.py` — Lore/scene storage, embedding, and LLM integration
-- `locations.py` — Location logic, position/state management
-- `npcs.py` — NPC suggestion and world population
-- `chat_history.py` — SQLite multi-turn chat/session engine
-- `*.db` — Chat/location/lore state
-- `chromadb/` — Vector store for lore/scene
-- `app.yaml` — Configuration for LLM, embedding, etc
-- `.env` — LLM API config (**never commit!**)
-- `ARCHITECTURE.md` — System overview
+- `app.py` — Entry point; loads context then starts CLI.
+- `bootstrap.py` — Loads all dependencies/services; builds live context.
+- `cli.py` — CLI REPL and UX loop.
+- `help.py`, `cli_utils.py` — Centralized banner, dynamic help, and output styling.
+- `commands/` — Modular CLI command handlers; dynamic registry.
+- `lore.py` — LoreService (LLM, embedding, vector logic, config).
+- `lore_entities.py` — Character/entity extraction, NLP, and fuzzy matching.
+- `chat_history.py` — Persistent, replayable chat/session tracking.
+- `app.yaml` — Configuration.
+- `.env` — API keys (**never commit!**)
+- `ARCHITECTURE.md` — In-depth developer architecture doc.
 
 ---
 
 ## Dependencies
 
-- ChromaDB — Semantic vector lore search
-- SQLite3 — Persistent chat/location logs
-- LiteLLM — Unified LLM API provider
-- Rich — CLI user experience
-- python-dotenv — Environment loading
-- PyYAML — YAML parsing/config
+- ChromaDB (semantic vector search)
+- SQLite3 (persistent chat logs)
+- LiteLLM (unified LLM API)
+- spaCy / en_core_web_sm (NLP for entity detection)
+- rapidfuzz (fuzzy matching)
+- Rich (CLI experience)
+- python-dotenv, PyYAML
 
 ---
 
-## Security & Best Practices
+## Best Practices
 
-- API keys in `.env`, **never** in code.
-- Data is migratable and forward-compatible.
-- Semantic vector search is paired with relational model for integrity.
+- API keys go only in `.env` (never source control).
+- Use pip and spaCy model install for all onboarding.
+- World and chat state is forward-compatible; modular design supports add/remove commands with confidence.
 
 ---
 
-## Documentation & Help
+## Documentation
 
-- **For design/architecture:** See [ARCHITECTURE.md](ARCHITECTURE.md)
-- **For CLI commands:** Run `help` or `help <command>` inside the CLI.
+- See [ARCHITECTURE.md](ARCHITECTURE.md) for technical and onboarding guidance.
+- Run `help` within the CLI for command-level docs.
 
 ---
 
 ## License
 
 MIT (see LICENSE)
+
+
