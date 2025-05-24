@@ -1,7 +1,10 @@
 
 # LoreBuilder CLI
 
-A modular, persistent CLI for world-building and replayable, context-rich character conversations. Combines Retrieval-Augmented Generation (RAG), ChromaDB vector search, SQLite chat history, and LLM-powered story expansion within a robust, developer-friendly command framework.
+> **A modular, persistent CLI for world-building and replayable, context-rich character conversations powered by LLMs, ChromaDB, and NLP.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue)
 
 ---
 
@@ -18,22 +21,21 @@ A modular, persistent CLI for world-building and replayable, context-rich charac
 
 ## Quickstart
 
-### 1. Install requirements
-
 ```bash
+git clone https://github.com/yourusername/lorebuilder-cli.git
+cd lorebuilder-cli
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 ```
 
-### 2. Configuration
+- Configure your LLM API key in `.env`:
+    ```env
+    LLM_API_KEY=your-model-api-key-here
+    ```
 
-- Edit `app.yaml` for LLM, embedding, ChromaDB path, prompts, etc.
-- Add your LLM API key in `.env` file (never commit this!):
-  ```
-  LLM_API_KEY=your-model-api-key-here
-  ```
+- (Optional) Edit `app.yaml` for additional config.
 
-### 3. Launch
+Run the app:
 
 ```bash
 python app.py
@@ -41,64 +43,79 @@ python app.py
 
 ---
 
-## CLI Usage
+## Usage
 
-- Type `help` or `help <command>` for the auto-generated command list and documentation.
-- Categories:
+- Type `help` or `help <command>` inside the CLI.
+- Example command categories:
   - **Lore:** `add_lore`, `generate_lore`, `store_generated_lore`, `query_lore`, `list_all_lore`, `delete_lore`
   - **Characters:** `chat_as`, `list_characters`
   - **System:** `help`, `exit`
-- Only currently active, supported commands are listed.
+
+---
+
+## Directory Structure
+
+```text
+app.py               # Main entrypoint
+bootstrap.py         # Service initialization
+cli.py               # CLI REPL and UX
+help.py, cli_utils.py# Help & output styling
+commands/            # Modular command handlers
+lore.py              # LoreService logic
+lore_entities.py     # Entity extraction and NLP
+chat_history.py      # Chat/session tracking
+app.yaml             # Configuration
+.env                 # API keys (never commit)
+ARCHITECTURE.md      # Dev architecture doc
+```
 
 ---
 
 ## Persistent World Model
 
-- **Chat:** All character and session logs in `lore_chat_history.db` (SQLite).
-- **Lore:** All scene, character, and context lore in ChromaDB vector storage; kept in sync with entity extraction for robust querying.
-
----
-
-## Project Structure
-
-- `app.py` — Entry point; loads context then starts CLI.
-- `bootstrap.py` — Loads all dependencies/services; builds live context.
-- `cli.py` — CLI REPL and UX loop.
-- `help.py`, `cli_utils.py` — Centralized banner, dynamic help, and output styling.
-- `commands/` — Modular CLI command handlers; dynamic registry.
-- `lore.py` — LoreService (LLM, embedding, vector logic, config).
-- `lore_entities.py` — Character/entity extraction, NLP, and fuzzy matching.
-- `chat_history.py` — Persistent, replayable chat/session tracking.
-- `app.yaml` — Configuration.
-- `.env` — API keys (**never commit!**)
-- `ARCHITECTURE.md` — In-depth developer architecture doc.
+- **Chat:** `lore_chat_history.db` (SQLite)
+- **Lore:** ChromaDB vector storage, kept in sync with entity extraction
 
 ---
 
 ## Dependencies
 
-- ChromaDB (semantic vector search)
-- SQLite3 (persistent chat logs)
-- LiteLLM (unified LLM API)
-- spaCy / en_core_web_sm (NLP for entity detection)
-- rapidfuzz (fuzzy matching)
-- Rich (CLI experience)
-- python-dotenv, PyYAML
-
----
-
-## Best Practices
-
-- API keys go only in `.env` (never source control).
-- Use pip and spaCy model install for all onboarding.
-- World and chat state is forward-compatible; modular design supports add/remove commands with confidence.
+- ChromaDB, SQLite3, LiteLLM, spaCy, rapidfuzz, Rich, python-dotenv, PyYAML
 
 ---
 
 ## Documentation
 
-- See [ARCHITECTURE.md](ARCHITECTURE.md) for technical and onboarding guidance.
-- Run `help` within the CLI for command-level docs.
+- See [ARCHITECTURE.md](ARCHITECTURE.md)
+- In-app `help`
+
+---
+
+## Contributing
+
+Pull requests welcome! Please open issues for bugs or feature requests.
+
+---
+
+## Credits
+
+- **Significant Contributors:**
+  - [Anthropic](https://anthropic.com/) - Claude 3.7 and Claude 4 
+  - [OpenAI](https://openai.com/) - ChatGPT 4.1
+
+- **Inspirations & Foundations:**
+  - [ChromaDB](https://www.trychroma.com/) — Vector database design and docs
+  - [spaCy](https://spacy.io/) — NLP entity recognition pipeline
+  - [Rich](https://github.com/Textualize/rich) — Terminal formatting and interactive UI
+
+---
+
+## Contact
+
+- Rodney Degracia [https://rodneydegracia.com](https://rodneydegracia.com)
+- Email: rdegraci@mmail.com
+- Linked In: [https://www.linkedin.com/in/rdegraci/](https://www.linkedin.com/in/rdegraci/)
+- GitHub Issues: [https://github.com/yourusername/lorebuilder-cli/issues](https://github.com/yourusername/lorebuilder-cli/issues)
 
 ---
 
