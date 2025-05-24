@@ -1,3 +1,4 @@
+
 """
 lore.py
 
@@ -116,7 +117,7 @@ def generate_lore(args, context):
             {"role": "user", "content": prompt}
         ],
         "api_key": _llm_api_key,
-        "max_tokens": 512
+        "max_tokens": 1024
     }
     
     try:
@@ -256,3 +257,5 @@ def delete_lore(args, context):
     except Exception as e:
         traceback.print_exc()
         rprint(f"[red]Error deleting lore: {e}")
+
+
