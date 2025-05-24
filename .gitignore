@@ -5,4 +5,4 @@ logs
 chromadb
 __pycache__
 *.db
-
+.lorebuilder_cli_history

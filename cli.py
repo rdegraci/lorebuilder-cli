@@ -13,6 +13,8 @@ from commands import COMMANDS_REGISTRY
 from help import print_banner, print_command_menu, print_command_help
 from cli_utils import cli_error, cli_warn, cli_info, cli_success  # centralized messaging
 
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import FileHistory
 
 def start_cli(context, verbose=False):
     """
@@ -26,10 +28,15 @@ def start_cli(context, verbose=False):
     print_command_menu()
     
     cli_info("Ready! Enter commands below:")
+
+    # Obtain history file path from config
+    config = context.get('config', {})
+    history_path = config.get('cli_history_path', '.lorebuilder_cli_history')
+    session = PromptSession(history=FileHistory(history_path))
     
     while True:
         try:
-            cmd = input(">> ").strip()
+            cmd = session.prompt(">> ").strip()
             if cmd == "exit":
                 break
 
