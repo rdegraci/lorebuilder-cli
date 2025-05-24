@@ -13,7 +13,6 @@ import os
 from rich import print as rprint
 import chat_history
 import lore
-import npcs
 import lore_entities
 from lore_entities import extract_character_names_from_lore
 
