@@ -24,18 +24,54 @@ def handle(args, context):
         args (list): Command arguments
         context (dict): Shared context dictionary
     """
+
+    # --- Helper: Improved argument parser allowing for quoted names ---
+    def parse_character_and_message(args):
+        """
+        Returns a tuple: (character_name (str), user_message (str), error (str or None))
+        Handles smart parsing for quoted multi-word character names with both single/double quotes.
+        """
+        if not args or len(args) < 2:
+            return None, None, "[red]Usage: chat_as <character_name> <user_message>"
+
+        first_arg = args[0]
+        if (first_arg.startswith('"') or first_arg.startswith("'")):
+            opening_quote = first_arg[0]
+            char_name_parts = []
+            close_found = False
+            # Remove opening quote
+            part = first_arg[1:]
+            if part:
+                char_name_parts.append(part)
+            # search for closing quote in subsequent args
+            for i in range(1, len(args)):
+                if args[i].endswith(opening_quote):
+                    # closing quote found
+                    if len(args[i]) > 1:
+                        char_name_parts.append(args[i][:-1])
+                    close_found = True
+                    char_name = ' '.join(char_name_parts).strip()
+                    user_message = ' '.join(args[i+1:]).strip()
+                    return char_name, user_message, None
+                char_name_parts.append(args[i])
+            # No closing quote found; fallback: treat everything as character name
+            char_name = ' '.join(char_name_parts).strip()
+            user_message = ''
+            return char_name, user_message, "[yellow]Warning: No closing quote found for character name."
+        else:
+            # Not quoted: treat first arg as character_name
+            character_name = first_arg.strip()
+            user_message = ' '.join(args[1:]).strip()
+            return character_name, user_message, None
+
     # --- SAFETY CHECK for lore._lore_service ---
     if getattr(lore, "_lore_service", None) is None:
         rprint("[red]Error: Lore service is not initialized! Cannot proceed with chat_as.")
         return
 
-    if not args or len(args) < 2:
-        rprint("[red]Usage: chat_as <character_name> <user_message>")
-        return
-
-    character_name = args[0].strip()
-    user_message = ' '.join(args[1:]).strip()
-
+    character_name, user_message, parse_error = parse_character_and_message(args)
+    if parse_error:
+        rprint(parse_error)
     if not character_name or not user_message:
         rprint("[red]Usage: chat_as <character_name> <user_message>")
         return
