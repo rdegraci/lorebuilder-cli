@@ -1,3 +1,4 @@
+
 """
 help.py - Banner and command/help menu utilities for CLI
 """
@@ -11,9 +12,6 @@ BANNER = (
 
 LORE_COMMANDS = [
     "add_lore", "generate_lore", "store_generated_lore", "query_lore", "list_all_lore", "delete_lore"
-]
-NAV_COMMANDS = [
-    "look", "save_look", "go", "reset_location", "history"
 ]
 CHAR_COMMANDS = [
     "chat_as", "reset"
@@ -33,7 +31,6 @@ def print_command_menu(commands_registry=None):
     """
     rprint("[bold cyan]Available Commands:[/bold cyan]")
     rprint("[cyan]Lore: [white]add_lore, generate_lore, store_generated_lore, query_lore, list_all_lore, delete_lore")
-    rprint("[cyan]Navigation: [white]look, save_look, go <direction>, reset_location, history")
     rprint("[cyan]Characters: [white]chat_as <character> <message>, reset <character>")
     rprint("[cyan]System: [white]help, exit")
     if commands_registry:
@@ -52,3 +49,5 @@ def print_command_help(command, commands_registry):
         rprint(f"[cyan]Help for '[bold]{command}[/bold]':\n{doc.strip()}")
     else:
         rprint(f"[grey]No help available for command: {command}")
+
+

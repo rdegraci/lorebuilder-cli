@@ -10,7 +10,6 @@ Requires app initialization/config prior to calling start_cli().
 from rich import print as rprint
 import traceback
 from commands import COMMANDS_REGISTRY
-import locations
 from help import print_banner, print_command_menu, print_command_help
 from cli_utils import cli_error, cli_warn, cli_info, cli_success  # centralized messaging
 
@@ -25,29 +24,6 @@ def start_cli(context, verbose=False):
     """
     print_banner()
     print_command_menu()
-    
-    # At script start: show last location for last-used character (if any)
-    try:
-        # Attempt to discover last character/session
-        conn = locations.get_db_connection()
-        c = conn.cursor()
-        c.execute("SELECT character_name FROM character_location ORDER BY timestamp DESC LIMIT 1")
-        row = c.fetchone()
-        conn.close()
-        if row:
-            first_char = row[0]
-            scene_info = locations.look(first_char)
-            rprint(f"[bold green]Restored location for '{first_char}':")
-            rprint(f"[bold magenta]{scene_info['display_name']}[/bold magenta] [grey]({scene_info['location_id']})[/grey]")
-            rprint(f"{scene_info['description']}")
-            if scene_info['exits']:
-                rprint(f"[bold white]Exits:[/bold white] " + ", ".join(scene_info['exits']))
-            if "_explanation" in scene_info and scene_info["_explanation"]:
-                rprint(f"[dim][Reason:] {scene_info['_explanation']}[/dim]")
-            context['last_look_result'] = scene_info
-    except Exception as e:
-        # Ignore if table empty or on error
-        cli_warn(f"Note: {str(e)}")
     
     cli_info("Ready! Enter commands below:")
     
