@@ -14,7 +14,7 @@ LORE_COMMANDS = [
     "add_lore", "generate_lore", "store_generated_lore", "query_lore", "list_all_lore", "delete_lore"
 ]
 CHAR_COMMANDS = [
-    "chat_as", "reset"
+    "chat_as"
 ]
 SYSTEM_COMMANDS = ["help", "exit"]
 
@@ -31,7 +31,7 @@ def print_command_menu(commands_registry=None):
     """
     rprint("[bold cyan]Available Commands:[/bold cyan]")
     rprint("[cyan]Lore: [white]add_lore, generate_lore, store_generated_lore, query_lore, list_all_lore, delete_lore")
-    rprint("[cyan]Characters: [white]chat_as <character> <message>, reset <character>")
+    rprint("[cyan]Characters: [white]chat_as <character> <message>")
     rprint("[cyan]System: [white]help, exit")
     if commands_registry:
         rprint("\n[dim]Type 'help <command>' for usage if available.[/dim]")
@@ -49,5 +49,6 @@ def print_command_help(command, commands_registry):
         rprint(f"[cyan]Help for '[bold]{command}[/bold]':\n{doc.strip()}")
     else:
         rprint(f"[grey]No help available for command: {command}")
+
 
 
