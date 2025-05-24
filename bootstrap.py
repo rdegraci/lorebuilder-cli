@@ -14,6 +14,8 @@ from rich import print as rprint
 import chat_history
 import lore
 import npcs
+import lore_entities
+from lore_entities import extract_character_names_from_lore
 
 
 def initialize_app():
@@ -56,10 +58,20 @@ def initialize_app():
                   llm_api_key=llm_api_key, chat_history=chat_history)
     # npcs module is stateless
 
+    # Extract lore documents and character names
+    try:
+        lore_docs = collection.get().get('documents', [])
+        characters_in_lore = extract_character_names_from_lore(lore_docs)
+    except Exception as e:
+        rprint(f"[yellow]Warning: Could not extract character names from lore. {e}[/yellow]")
+        characters_in_lore = set()
+
     context = {
         'config': config,  # pass to CLI if handlers wish to use
         'last_generated_lore': '',
         'last_look_result': None,
+        'characters_in_lore': characters_in_lore,
+        'chroma_collection': collection,
     }
     return context
 

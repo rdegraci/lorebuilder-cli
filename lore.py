@@ -118,7 +118,7 @@ class LoreService:
         
         try:
             # Generate embedding for the lore text
-            embedding = self.embedder.embed_documents([lore_text])[0]
+            embedding = self.embedder([lore_text])[0]
             
             # Add to ChromaDB collection
             self.chroma_collection.add(
@@ -194,7 +194,7 @@ class LoreService:
         lore_id = self._generate_lore_id()
         
         try:
-            embedding = self.embedder.embed_documents([lore_text])[0]
+            embedding = self.embedder([lore_text])[0]
             self.chroma_collection.add(
                 documents=[lore_text], 
                 embeddings=[embedding], 
@@ -396,3 +396,5 @@ def delete_lore(args: List[str], context: Dict[str, Any]) -> None:
         rprint(ERROR_LORE_SERVICE_NOT_INITIALIZED)
         return
     _lore_service.delete_lore(args, context)
+
+
