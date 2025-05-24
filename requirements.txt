@@ -1,5 +1,4 @@
-chromadb
-litellm
-rich
-python-dotenv
-yaml
+rich==14.0.0
+litellm==1.70.4
+chromadb==1.0.10
+sentence_transformers==4.1.0
