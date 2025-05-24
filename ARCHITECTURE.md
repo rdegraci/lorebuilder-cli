@@ -1,110 +1,93 @@
-# LoreBuilder Architecture (2024 Update)
 
-LoreBuilder is a hybrid Retrieval-Augmented Generation (RAG) world-building CLI, engineered for persistent, replayable, and lore-rich conversational experiences. The system integrates:
+# LoreBuilder Developer Architecture Reference (2024)
 
-- SQLite-backed multi-turn chat and location/session history,
-- ChromaDB-powered vector search for scene/lore,
-- LLM-driven logic for contextual storytelling and dynamic world navigation.
-
-This document targets code reviewers needing a high-level and practical grasp of system structure, data flows, and extensibility.
+**Audience:** For onboarding and orienting new developers to the LoreBuilder CLI codebase.
 
 ---
 
-## 1. Key Features
+## 1. System Overview
 
-- **Multi-turn Chat:** Supports per-character tracked, persistent conversations—stored in SQLite for reliability and replay.
-- **Location/Scene System:** Dual-persistence design: relational (SQLite tables: `character_location`, `location_entries`) for session/canonical tracking, and vector (ChromaDB) for flexible, semantic lore lookup.
-- **LLM-driven Assignment:** When spawning new characters, context-aware LLM selects (or generates) location assignments, falling back to random canonical sites if needed.
-- **Scene Lore Canonicalization:** Scenes and exits can be permanently 'saved' or indexed for canonical or non-canonical retrieval.
-- **Interactive CLI:** Modular command registry, help, and error systems allow rapid CLI evolution, scene navigation, lore addition, chat, and world inspection.
+LoreBuilder is a modular CLI application for RAG-powered conversational world-building. It supports persistent character chat, semantic lore search, and LLM-driven dialog, all presented via a command registry architecture and terminal UI.
 
 ---
 
-## 2. Components Overview
+## 2. Core Workflow
 
-### 2.1. Initialization (`bootstrap.py`)
-- Handles configuration, environment loading, ChromaDB, embedding, database initialization, and module injection in a single place.
-- Entry point for bootstrapping the application before handing off to the CLI loop.
+### a) app.py (Entrypoint)
+- Loads the world and all modules via `bootstrap.initialize_app()`
+- Immediately launches CLI loop (`cli.start_cli(context)`)
 
-### 2.2. CLI Loop & Parsing (`cli.py`)
-- Orchestrates user interaction, command input, context management, and handler dispatch.
-- Leverages a centralized command registry for extensibility.
-- Handles only the CLI UI—separated from all domain logic.
+### b) bootstrap.py (Application Initialization)
+- Loads configuration (`app.yaml`) and secrets (`.env`)
+- Verifies all needed LLM, embedding, and data storage models are present
+- Sets up:
+    - Persistent ChromaDB collection for vector search/lore
+    - Embedding models (SentenceTransformer)
+    - Chat/session DB for replayable histories (SQLite/ chat_history.py)
+    - Master LLM/config/event service (`LoreService` in lore.py)
+    - NLP entity extraction for dynamic character list (spaCy/rapidfuzz)
 
-### 2.3. Banner/Help/Menu (`help.py`)
-- Renders the CLI ASCII banner, command listing, and per-command help from handler docstrings.
-- Shows dynamic help based on the command registry (`help`/`help <command>` commands).
+- Returns a global `context` dict with all active resources and live world info
 
-### 2.4. Centralized CLI Output (`cli_utils.py`)
-- Ensures consistent, branded output for error, success, warning, and info messages.
-- Provides reusable helpers for all user-facing CLI messaging with styling.
+### c) cli.py (CLI Loop)
+- Prints banner, reads/presents available commands from registry
+- Parses user input, resolves to canonical command, passes to handler with shared context
+- Handles help, error, and info messages consistently (via cli_utils.py)
 
-### 2.5. Command Registry (`commands/` directory)
-- Directory of modular, single-responsibility command handlers.
-- `commands/__init__.py` builds the `COMMANDS_REGISTRY` mapping command names to handlers.
-- Enables drop-in addition or updating of user-available CLI commands.
-
-### 2.6. Lore Handling (`lore.py`), Location Logic (`locations.py`), NPCs, Chat (`chat_history.py`)
-- Each core feature is modular and initialized via shared resources from the bootstrap context.
-- Lore and locations are persistent, LLM/embedding enhanced, and support both relational and vector-based querying.
-
----
-
-## 3. Data & Workflow Outline
-
-- **Bootstrapping a World/Session:** Uses `bootstrap.py` to prepare config, ChromaDB, embedding, chat DB, and all feature modules.
-- **CLI Launch:** `app.py` simply calls `initialize_app()` (bootstrap) and `start_cli(context)` (CLI loop).
-- **User Command Handling:** All commands are parsed and dispatched dynamically from the registry. Help and messaging are standardized.
-- **Chat/Session Persistence:** Every exchange (user or LLM) is logged in `chat_history.db` and can be replayed.
-- **Location Query/Update:** Scene changes update both relational and vector mapping.
-- **Scene Saving:** Lore and scene data are stored in both SQL and vector/embedding stores as appropriate.
+### d) commands/ (Command Modules)
+- Each handler implements a single CLI entrypoint (e.g., add_lore, chat_as, list_characters)
+- All command handlers are centrally registered in commands/__init__.py
+- Dynamic help and menu loading—only active and maintained commands appear in UI/menus (`help` relies on docstrings)
+- All deprecated modules such as locations.py and npcs.py are now entirely decoupled and safe to remove
 
 ---
 
-## 4. Extensibility and Maintainability
+## 3. Core Data Flows
 
-- The modular design supports new commands, output formats, or bootstrapping options without impact to mainline logic.
-- CLI output/messages and help are all centralized and can be themed or internationalized.
-- All modules are decoupled from the CLI and interact only through passed-in dependencies/context.
-- The command registry system ensures easy discovery and documentation.
-
----
-
-## 5. Dependencies
-
-- [ChromaDB](https://www.trychroma.com/) (semantic vector storage)
-- [LiteLLM](https://github.com/BerriAI/litellm) (LLM API abstraction)
-- [Rich](https://github.com/Textualize/rich) (CLI feedback)
-- [sqlite3](https://docs.python.org/3/library/sqlite3.html) (persistent chat/location/lore history)
-- [python-dotenv](https://github.com/theskumar/python-dotenv) (environment loading)
+- **World/Lore:** Managed exclusively by ChromaDB + embeddings for retrieval, and always in sync for entity extraction (characters).
+- **Chat:** All messages are routed through core SQLite persistence for multi-turn, sessionized replay/support.
+- **LLM:** Only via the LoreService class (no scattered API keys/configs)
+- **Character/Entity Extraction:** spaCy and rapidfuzz, invoked on world/lore data and user messaging to keep chat_as flexible and robust (supports quoted, fuzzy, full/partial, and multi-word character names)
 
 ---
 
-## 6. File/Schema Overview
+## 4. File and Module Map
 
-- `app.py` — Minimal entrypoint, launches bootstrap then CLI
-- `bootstrap.py` — All configuration, env, embedding, vector DB, and module setup
-- `cli.py` — CLI input loop, command parsing, user interaction, and context control
-- `help.py` — Banner, command menu, and dynamic help utilities
-- `cli_utils.py` — Consistent output for error, warning, info, and success
-- `commands/` — Modular directory with individual CLI command handler modules and the global registry
-- `lore.py` — Lore/scene logic, embedding, LLM generation, and vector operations
-- `locations.py` — Location creaton/query/movement, canonical and non-canonical state tracking
-- `npcs.py` — Plausible NPC population for scenes
-- `chat_history.py` — SQLite multi-turn chat/session engine
-- `*.db` — Persistent chat/location/lore data (SQLite)
-- `chromadb/` — Vector/semantic lore descriptions (ChromaDB)
-- `ARCHITECTURE.md` — (This file)
-- `app.yaml` — Config (models, prompts, data paths)
-- `.env` — LLM and secret config
+- **app.py** — Entrypoint, loads all dependencies, and drops to CLI
+- **bootstrap.py** — All startup logic/services/context initialization
+- **cli.py** — CLI and command input/repl
+- **help.py, cli_utils.py** — Banner, help, consistent outputs
+- **commands/** — All registered CLI command handlers, one per file, registry maintained in __init__.py
+- **lore.py** — LoreService, LLM integration, embeddings, all RAG logic, and active world state
+- **lore_entities.py** — All character/entity extraction and fuzzy matching
+- **chat_history.py** — Session chat persistence
 
 ---
 
-## 7. Reviewer Notes
-- All persistent world, chat, and lore state is forward-migration safe and replayable.
-- Vector+relational hybrid enables fast semantic querying while retaining story/world integrity via canonical RDBMS state.
-- CLI output, help, and error handling are now modular and consistent across commands and workflows.
-- Guidance for LLM context/context pruning, rapid location assignment, and extensibility points is embedded in code comments.
-- See tests and command help for worked CLI/data examples.
+## 5. Extensibility Pointers
 
-_This document supersedes earlier summaries with details on the modular CLI, command registry, and centralized output architecture._
+- **To add a command:** Write handler in commands/, add to __init__.py
+- **To adjust world/LLM config:** Edit bootstrap.py and/or LoreService config in lore.py
+- **To change entity extraction:** Update logic in lore_entities.py
+
+---
+
+## 6. Onboarding and Upgrading
+
+- `pip install -r requirements.txt`
+- `python -m spacy download en_core_web_sm`
+- Configure `.env` for LLM API keys
+- Launch with `python app.py`
+- Run `help` or `help <command>` for current list and handler documentation
+
+---
+
+## 7. Deprecations
+
+- The locations.py and npcs.py modules are no longer referenced or registered; their logic is not used in the current CLI, command registry, or world data model, and are safe to delete.
+
+---
+
+_This summary is up to date as of 2024. See command docstrings or bootstrap.py for further detail, or CLI menus for active capability._
+
+
