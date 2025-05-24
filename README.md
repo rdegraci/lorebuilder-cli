@@ -113,7 +113,7 @@ Pull requests welcome! Please open issues for bugs or feature requests.
 ## Contact
 
 - Rodney Degracia [https://rodneydegracia.com](https://rodneydegracia.com)
-- Email: rdegraci@mmail.com
+- Email: rdegraci@gmail.com
 - Linked In: [https://www.linkedin.com/in/rdegraci/](https://www.linkedin.com/in/rdegraci/)
 - GitHub Issues: [https://github.com/yourusername/lorebuilder-cli/issues](https://github.com/yourusername/lorebuilder-cli/issues)
 
