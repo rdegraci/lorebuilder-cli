@@ -4,6 +4,7 @@
 > **A modular, persistent CLI for world-building and replayable, context-rich character conversations powered by LLMs, ChromaDB, and NLP.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Tests](https://github.com/rdegraci/lorebuilder-cli/actions/workflows/test.yml/badge.svg)](https://github.com/rdegraci/lorebuilder-cli/actions/workflows/test.yml)
 ![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue)
 
 ---
