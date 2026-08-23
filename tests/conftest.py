@@ -23,6 +23,10 @@ def capture_rprint(monkeypatch):
         highlight=False,
     )
 
+    import cli_utils
+
+    monkeypatch.setattr(cli_utils, "rprint", console.print)
+
     def _capture(module):
         monkeypatch.setattr(module, "rprint", console.print)
         return buffer

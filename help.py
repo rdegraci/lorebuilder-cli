@@ -2,6 +2,7 @@
 help.py - Banner and command/help menu utilities for CLI
 """
 from rich import print as rprint
+from cli_utils import print_literal, print_usage
 from rich.text import Text
 
 BANNER = (
@@ -206,7 +207,7 @@ def print_command_menu(commands_registry=None):
             continue
         rprint(f"[cyan]{category}:[/cyan]")
         for line in lines:
-            rprint(f"  [white]{line}[/white]")
+            print_literal(line, style="white", prefix="  ")
 
     rprint(Text("Type 'help <command>' for details. Example: help add_lore", style="dim"))
 
@@ -231,7 +232,7 @@ def print_command_help(command: str, commands_registry=None):
         return
 
     rprint(f"[bold cyan]{command}[/bold cyan] — {help_info['summary']}")
-    rprint(f"\n[cyan]Usage:[/cyan] {help_info['usage']}")
+    print_usage(help_info["usage"], leading_newline=True)
 
     description = help_info.get("description")
     if description:

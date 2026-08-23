@@ -6,6 +6,8 @@ Handles the chat_to CLI command for LoreBuilder.
 """
 from rich import print as rprint
 
+from cli_utils import print_usage
+
 from .chat_common import (
     check_lore_service,
     parse_character_and_message,
@@ -26,7 +28,7 @@ def handle(args, context):
     if parse_error:
         rprint(parse_error)
     if not character_name or not user_message:
-        rprint("[red]Usage: chat_to <character_name> <user_message>")
+        print_usage("chat_to <character_name> <user_message>", style="red")
         return
 
     character_to_use = resolve_character(

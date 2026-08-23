@@ -6,6 +6,8 @@ Handles the reset_chat CLI command to clear a character's conversation history.
 """
 from rich import print as rprint
 
+from cli_utils import print_usage
+
 import chat_history
 from .chat_common import check_lore_service, parse_character_from_args, resolve_character
 
@@ -23,7 +25,7 @@ def handle(args, context):
     if parse_warning:
         rprint(parse_warning)
     if not character_name:
-        rprint("[red]Usage: reset_chat <character_name>")
+        print_usage("reset_chat <character_name>", style="red")
         return
 
     character_to_use = resolve_character(

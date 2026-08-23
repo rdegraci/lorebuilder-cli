@@ -76,11 +76,11 @@ WARNING_NO_LORE_FOUND = "[dim]No relevant lore found."
 INFO_NO_EXISTING_LORE = "[dim]No lore entries found in the system."
 LORE_MODULE_INITIALIZED = "[dim]Lore module initialized.[/dim]"
 
-# Usage messages
-USAGE_ADD_LORE = "[yellow]Usage: add_lore <lore_text>"
-USAGE_GENERATE_LORE = "[yellow]Usage: generate_lore <user_prompt>"
-USAGE_QUERY_LORE = "[yellow]Usage: query_lore <query>"
-USAGE_DELETE_LORE = "[yellow]Usage: delete_lore <lore_id>"
+# Usage messages (plain text; use cli_utils.print_usage when displaying)
+USAGE_ADD_LORE = "add_lore <lore_text>"
+USAGE_GENERATE_LORE = "generate_lore <user_prompt>"
+USAGE_QUERY_LORE = "query_lore <query>"
+USAGE_DELETE_LORE = "delete_lore <lore_id>"
 
 # System prompts and templates
 DEFAULT_LORE_SYSTEM_PROMPT = "You are a creative worldbuilder."

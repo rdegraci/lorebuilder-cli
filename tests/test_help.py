@@ -37,6 +37,26 @@ def test_print_command_help_unknown_command(capture_rprint):
     assert "No such command" in output
 
 
+def test_print_command_help_shows_literal_placeholders(capture_rprint):
+    capture, buffer = capture_rprint
+    capture(help_module)
+
+    help_module.print_command_help("add_lore", COMMANDS_REGISTRY)
+    output = buffer.getvalue()
+
+    assert "add_lore <lore_text>" in output
+
+
+def test_print_command_menu_shows_bracketed_help_usage(capture_rprint):
+    capture, buffer = capture_rprint
+    capture(help_module)
+
+    help_module.print_command_menu(COMMANDS_REGISTRY)
+    output = buffer.getvalue()
+
+    assert "help [command]" in output
+
+
 def test_print_command_menu_lists_registered_commands(capture_rprint):
     capture, buffer = capture_rprint
     capture(help_module)

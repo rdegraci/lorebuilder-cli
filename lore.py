@@ -14,6 +14,7 @@ from typing import Dict, List, Optional, Any, Union
 from rich import print as rprint
 import litellm
 from datetime import datetime
+from cli_utils import print_usage
 from llm_utils import extract_completion_text
 from constants import (
     MIN_LORE_ID,
@@ -112,7 +113,7 @@ class LoreService:
             context: Shared context dictionary
         """
         if not args:
-            rprint(USAGE_ADD_LORE)
+            print_usage(USAGE_ADD_LORE, style="yellow")
             return
         
         lore_text = " ".join(args)
@@ -143,7 +144,7 @@ class LoreService:
             context: Shared context dictionary
         """
         if not args:
-            rprint(USAGE_GENERATE_LORE)
+            print_usage(USAGE_GENERATE_LORE, style="yellow")
             return
         
         prompt = " ".join(args)
@@ -234,7 +235,7 @@ class LoreService:
             context: Shared context dictionary
         """
         if not args:
-            rprint(USAGE_QUERY_LORE)
+            print_usage(USAGE_QUERY_LORE, style="yellow")
             return
         
         query = " ".join(args)
@@ -286,7 +287,7 @@ class LoreService:
             context: Shared context dictionary
         """
         if not args:
-            rprint(USAGE_DELETE_LORE)
+            print_usage(USAGE_DELETE_LORE, style="yellow")
             return
             
         lore_id = args[0]

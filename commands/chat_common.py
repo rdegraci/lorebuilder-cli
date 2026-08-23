@@ -63,7 +63,7 @@ def parse_character_and_message(args: List[str]) -> Tuple[Optional[str], Optiona
         (character_name, user_message, error_or_warning)
     """
     if not args or len(args) < 2:
-        return None, None, "[red]Usage: chat_to <character_name> <user_message>"
+        return None, None, None
 
     first_arg = args[0]
     if first_arg.startswith('"') or first_arg.startswith("'"):

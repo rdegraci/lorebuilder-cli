@@ -7,6 +7,8 @@ Handles the chat_with CLI command for multi-turn character conversations.
 from rich import print as rprint
 from prompt_toolkit import PromptSession
 
+from cli_utils import print_usage
+
 from .chat_common import (
     check_lore_service,
     generate_opening_greeting_safe,
@@ -36,7 +38,7 @@ def handle(args, context):
     if parse_warning:
         rprint(parse_warning)
     if not character_name:
-        rprint("[red]Usage: chat_with <character_name>")
+        print_usage("chat_with <character_name>", style="red")
         return
 
     character_to_use = resolve_character(
