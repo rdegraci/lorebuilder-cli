@@ -68,7 +68,7 @@ SUCCESS_LORE_STORED = "[green]Stored generated lore with id {id}."
 SUCCESS_LORE_DELETED = "[green]Deleted lore entry with ID {id}."
 
 # Warning messages
-WARNING_NO_LORE_TO_STORE = "[yellow]No generated lore to store. Use generate_lore first."
+INFO_GENERATED_LORE_NOT_SAVED = "[yellow]Generated lore is not saved yet. Run store_generated_lore to persist it.[/yellow]"
 WARNING_NO_LORE_FOUND = "[dim]No relevant lore found."
 
 # Info messages

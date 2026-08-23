@@ -34,6 +34,7 @@ from constants import (
     ERROR_DELETING_LORE,
     WARNING_NO_LORE_TO_STORE,
     WARNING_NO_LORE_FOUND,
+    INFO_GENERATED_LORE_NOT_SAVED,
     INFO_NO_EXISTING_LORE,
     USAGE_ADD_LORE,
     USAGE_GENERATE_LORE,
@@ -177,6 +178,7 @@ class LoreService:
             context['last_generated_lore'] = generated
             rprint(f"[green]Generated Lore:")
             rprint(f"{generated}")
+            rprint(INFO_GENERATED_LORE_NOT_SAVED)
         except Exception as e:
             rprint(ERROR_GENERATING_LORE.format(error=e))
     

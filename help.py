@@ -42,12 +42,13 @@ COMMAND_HELP = {
         "usage": "generate_lore <prompt>",
         "description": (
             "Ask the LLM to write new world details. Relevant existing lore is retrieved "
-            "automatically and used as context. The result is kept in memory until you run "
-            "store_generated_lore."
+            "automatically and used as context. Generated lore is kept in memory only and is "
+            "not saved to the world until you run store_generated_lore."
         ),
         "examples": [
             "generate_lore Describe a festival held by the people of Ardelune.",
             "generate_lore What secrets are rumored about the Order of Shadows?",
+            "store_generated_lore",
         ],
     },
     "store_generated_lore": {
