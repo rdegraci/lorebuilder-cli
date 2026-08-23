@@ -76,6 +76,31 @@ ARCHITECTURE.md      # Dev architecture doc
 
 ---
 
+## Development
+
+Install runtime and test dependencies:
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+python -m spacy download en_core_web_sm
+```
+
+Run the test suite:
+
+```bash
+pytest
+```
+
+With coverage:
+
+```bash
+pytest --cov=. --cov-report=term-missing
+```
+
+Tests run automatically on GitHub Actions for pushes and pull requests to `dev` and `main`.
+
+---
+
 ## Documentation
 
 - See [ARCHITECTURE.md](ARCHITECTURE.md)

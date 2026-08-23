@@ -38,7 +38,6 @@ LoreBuilder is a modular CLI application for RAG-powered conversational world-bu
 - Each handler implements a single CLI entrypoint (e.g., add_lore, chat_to, list_characters)
 - All command handlers are centrally registered in commands/__init__.py
 - Dynamic help and menu loading—only active and maintained commands appear in UI/menus (`help` relies on docstrings)
-- All deprecated modules such as locations.py and npcs.py are now entirely decoupled and safe to remove
 
 ---
 
@@ -82,9 +81,9 @@ LoreBuilder is a modular CLI application for RAG-powered conversational world-bu
 
 ---
 
-## 7. Deprecations
+## 7. Removed Legacy Commands
 
-- The locations.py and npcs.py modules are no longer referenced or registered; their logic is not used in the current CLI, command registry, or world data model, and are safe to delete.
+Location and scene commands (`look`, `history`, `save_look`, `reset`) have been removed. Character chat is handled by `chat_to` and `chat_with`.
 
 ---
 

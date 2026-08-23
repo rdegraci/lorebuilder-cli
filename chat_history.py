@@ -5,7 +5,7 @@ chat_history.py
 Provides SQLite-backed session-based chat history management for multi-turn character conversations.
 """
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Tuple, Dict
 from contextlib import contextmanager
 
@@ -27,6 +27,11 @@ from constants import (
     ERROR_HISTORY_EXPORT_FAILED,
     ERROR_SESSION_LIST_FAILED
 )
+
+
+def _utc_now() -> str:
+    """Return current UTC time as an ISO string for SQLite storage."""
+    return datetime.now(timezone.utc).isoformat()
 
 
 class ChatHistoryService:
@@ -122,14 +127,14 @@ class ChatHistoryService:
                     session_id = row[0]
                     cur.execute(
                         "UPDATE chat_sessions SET last_active=? WHERE id=?",
-                        (datetime.utcnow(), session_id),
+                        (_utc_now(), session_id),
                     )
                     conn.commit()
                     return session_id
                 # Create new session
                 cur.execute(
                     "INSERT INTO chat_sessions (character, last_active) VALUES (?, ?)",
-                    (character, datetime.utcnow()),
+                    (character, _utc_now()),
                 )
                 session_id = cur.lastrowid
                 conn.commit()
@@ -155,7 +160,7 @@ class ChatHistoryService:
             raise ValueError(ERROR_EMPTY_MESSAGE)
             
         try:
-            ts = datetime.utcnow()
+            ts = _utc_now()
             with self.get_connection() as conn:
                 cur = conn.cursor()
                 cur.execute(
