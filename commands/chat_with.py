@@ -9,6 +9,7 @@ from prompt_toolkit import PromptSession
 
 from .chat_common import (
     check_lore_service,
+    generate_opening_greeting_safe,
     parse_character_from_args,
     print_character_reply,
     print_recent_history,
@@ -50,7 +51,14 @@ def handle(args, context):
         f"Chatting with {character_to_use}. "
         "Type end_chat to return to the main menu."
     )
-    print_recent_history(character_to_use, session_id)
+
+    history = chat_history.get_history(session_id, limit=1)
+    if history:
+        print_recent_history(character_to_use, session_id)
+    else:
+        greeting = generate_opening_greeting_safe(character_to_use)
+        if greeting is not None:
+            print_character_reply(character_to_use, greeting)
 
     session = PromptSession()
     while True:

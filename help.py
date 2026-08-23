@@ -21,6 +21,7 @@ LORE_COMMANDS = [
 CHAR_COMMANDS = [
     "chat_to",
     "chat_with",
+    "reset_chat",
     "list_characters",
 ]
 SYSTEM_COMMANDS = ["help", "exit"]
@@ -112,6 +113,8 @@ COMMAND_HELP = {
         "usage": "chat_with <character_name>",
         "description": (
             "Start an interactive conversation loop with a character mentioned in world lore. "
+            "If there is no prior history, the character greets you first. "
+            "Otherwise recent messages are shown. "
             "Character replies appear as Character>> and your input uses You>>. "
             "Conversation history is saved per character. Type end_chat to return to the main menu."
         ),
@@ -120,12 +123,24 @@ COMMAND_HELP = {
             'chat_with "The Mage of the Lake"',
         ],
     },
+    "reset_chat": {
+        "summary": "Clear a character's conversation history",
+        "usage": "reset_chat <character_name>",
+        "description": (
+            "Delete all saved messages for a character's chat session. "
+            "The session remains, but the next chat_with will start fresh with a new greeting."
+        ),
+        "examples": [
+            "reset_chat Mara",
+            'reset_chat "The Mage of the Lake"',
+        ],
+    },
     "list_characters": {
         "summary": "List characters found in lore",
         "usage": "list_characters",
         "description": (
             "Show person names extracted from all saved lore using spaCy NER. "
-            "Use chat_to for a single message or chat_with for a conversation."
+            "Use chat_to for a single message, chat_with for a conversation, or reset_chat to clear history."
         ),
         "examples": [
             "list_characters",

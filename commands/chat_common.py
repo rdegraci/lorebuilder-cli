@@ -189,3 +189,58 @@ def send_message_and_get_reply_safe(character_name: str, user_message: str) -> O
         traceback.print_exc()
         rprint(f"[red]Error during LLM chat: {str(e)}")
         return None
+
+
+def generate_opening_greeting(character_name: str) -> Optional[str]:
+    """
+    Generate an in-character greeting when starting a new conversation.
+
+    Returns None if the character already has message history.
+    """
+    session_id = chat_history.get_or_create_session(character_name)
+    if chat_history.get_history(session_id, limit=1):
+        return None
+
+    relevant_lore = lore.query_lore_internal(character_name, 3)
+    context_str = (
+        "\n\n".join(relevant_lore)
+        if relevant_lore
+        else "No specific lore found for this character."
+    )
+
+    llm_messages = [
+        {
+            "role": "system",
+            "content": lore._lore_service.config.get("chat_prompt_template", "")
+            .replace("{character_name}", character_name)
+            .replace("{context}", context_str),
+        },
+        {
+            "role": "user",
+            "content": (
+                "The user has just entered to speak with you. "
+                "Greet them briefly in character and invite them to talk."
+            ),
+        },
+    ]
+
+    response = litellm.completion(
+        model=lore._lore_service.config.get("llm_provider", "openai/gpt-4o-mini"),
+        messages=llm_messages,
+        api_key=lore._lore_service.llm_api_key,
+        max_tokens=512,
+    )
+
+    reply = extract_completion_text(response)
+    chat_history.add_message(session_id, "character", reply)
+    return reply
+
+
+def generate_opening_greeting_safe(character_name: str) -> Optional[str]:
+    """Call generate_opening_greeting and print errors instead of raising."""
+    try:
+        return generate_opening_greeting(character_name)
+    except Exception as e:
+        traceback.print_exc()
+        rprint(f"[red]Error generating greeting: {str(e)}")
+        return None

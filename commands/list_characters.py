@@ -20,4 +20,4 @@ def handle(args, context):
     rprint(f"[cyan]Characters mentioned in world lore ([bold]{len(characters)}[/bold]):")
     for c in sorted(characters):
         rprint(f"- [bold]{c}[/bold]")
-    rprint("[dim]Use chat_to for a quick message or chat_with for a conversation.[/dim]")
+    rprint("[dim]Use chat_to for a quick message, chat_with for a conversation, or reset_chat to clear history.[/dim]")

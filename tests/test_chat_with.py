@@ -30,7 +30,12 @@ def test_chat_with_enters_loop_and_exits_on_end_chat(
     capture(chat_common)
 
     monkeypatch.setattr(chat_common.chat_history, "get_or_create_session", lambda character: 1)
-    monkeypatch.setattr(chat_common.chat_history, "get_history", lambda session_id, limit=4: [])
+    monkeypatch.setattr(chat_common.chat_history, "get_history", lambda session_id, limit=1: [])
+    monkeypatch.setattr(
+        chat_with,
+        "generate_opening_greeting_safe",
+        lambda character: "Hello, traveler.",
+    )
     monkeypatch.setattr(
         chat_with,
         "send_message_and_get_reply_safe",
@@ -48,6 +53,7 @@ def test_chat_with_enters_loop_and_exits_on_end_chat(
 
     output = buffer.getvalue()
     assert "Chatting with Mara" in output
+    assert "Mara>> Hello, traveler." in output
     assert "Mara>> Reply to: Hello there" in output
     assert "Ended chat with Mara" in output
 
@@ -67,12 +73,8 @@ def test_chat_with_supports_multi_word_character_names(
         "get_or_create_session",
         lambda character: captured.setdefault("character", character) or 1,
     )
-    monkeypatch.setattr(chat_common.chat_history, "get_history", lambda session_id, limit=4: [])
-    monkeypatch.setattr(
-        chat_with,
-        "send_message_and_get_reply_safe",
-        lambda character, message: "Greetings.",
-    )
+    monkeypatch.setattr(chat_common.chat_history, "get_history", lambda session_id, limit=1: [])
+    monkeypatch.setattr(chat_with, "generate_opening_greeting_safe", lambda character: "Greetings.")
     monkeypatch.setattr(
         chat_with,
         "PromptSession",
@@ -97,10 +99,15 @@ def test_chat_with_shows_recent_history(initialized_lore, capture_rprint, monkey
     monkeypatch.setattr(
         chat_common.chat_history,
         "get_history",
-        lambda session_id, limit=4: [
+        lambda session_id, limit=1: [("user", "Hello")] if limit == 1 else [
             ("user", "Hello"),
             ("character", "Welcome back."),
         ],
+    )
+    monkeypatch.setattr(
+        chat_with,
+        "generate_opening_greeting_safe",
+        lambda character: "Should not be called",
     )
     monkeypatch.setattr(
         chat_with,
@@ -116,6 +123,33 @@ def test_chat_with_shows_recent_history(initialized_lore, capture_rprint, monkey
     assert "Mara>> Welcome back." in output
 
 
+def test_chat_with_generates_greeting_for_new_session(
+    initialized_lore, capture_rprint, monkeypatch
+):
+    capture, buffer = capture_rprint
+    chat_with = _chat_with_module()
+    capture(chat_with)
+    capture(chat_common)
+
+    monkeypatch.setattr(chat_common.chat_history, "get_or_create_session", lambda character: 1)
+    monkeypatch.setattr(chat_common.chat_history, "get_history", lambda session_id, limit=1: [])
+    monkeypatch.setattr(
+        chat_with,
+        "generate_opening_greeting_safe",
+        lambda character: "Welcome back to the lake.",
+    )
+    monkeypatch.setattr(
+        chat_with,
+        "PromptSession",
+        lambda: MagicMock(prompt=lambda *args, **kwargs: "end_chat"),
+    )
+
+    chat_with.handle(["Mara"], {"characters_in_lore": {"Mara"}})
+
+    assert "Mara>> Welcome back to the lake." in buffer.getvalue()
+    assert "Recent conversation" not in buffer.getvalue()
+
+
 def test_chat_with_help_inside_loop(initialized_lore, capture_rprint, monkeypatch):
     capture, buffer = capture_rprint
     chat_with = _chat_with_module()
@@ -123,7 +157,8 @@ def test_chat_with_help_inside_loop(initialized_lore, capture_rprint, monkeypatc
     capture(chat_common)
 
     monkeypatch.setattr(chat_common.chat_history, "get_or_create_session", lambda character: 1)
-    monkeypatch.setattr(chat_common.chat_history, "get_history", lambda session_id, limit=4: [])
+    monkeypatch.setattr(chat_common.chat_history, "get_history", lambda session_id, limit=1: [])
+    monkeypatch.setattr(chat_with, "generate_opening_greeting_safe", lambda character: None)
     prompts = iter(["help", "end_chat"])
     monkeypatch.setattr(
         chat_with,

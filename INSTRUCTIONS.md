@@ -74,12 +74,14 @@ Send a single message with `chat_to`, or start a multi-turn session with `chat_w
 ```bash
 chat_to Mara Who rules Ardelune?
 chat_with Mara
+Mara>> Greetings, traveler. What brings you here?
 You>> Who rules Ardelune?
 Mara>> The council of scholars holds power in Ardelune.
 You>> end_chat
+reset_chat Mara
 ```
 
-Conversation history is saved per character. Type `end_chat` to leave a `chat_with` session.
+Conversation history is saved per character. Type `end_chat` to leave a `chat_with` session. Use `reset_chat` to clear a character's history and start fresh.
 
 ---
 
