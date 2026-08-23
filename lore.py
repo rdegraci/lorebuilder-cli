@@ -14,6 +14,7 @@ from typing import Dict, List, Optional, Any, Union
 from rich import print as rprint
 import litellm
 from datetime import datetime
+from llm_utils import extract_completion_text
 from constants import (
     MIN_LORE_ID,
     MAX_LORE_ID,
@@ -172,7 +173,7 @@ class LoreService:
         
         try:
             response = litellm.completion(**llm_args)
-            generated = response["choices"][0]["message"]["content"]
+            generated = extract_completion_text(response)
             context['last_generated_lore'] = generated
             rprint(f"[green]Generated Lore:")
             rprint(f"{generated}")

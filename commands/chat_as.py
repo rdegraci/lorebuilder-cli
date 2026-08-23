@@ -10,6 +10,7 @@ import litellm
 import lore
 import chat_history
 from lore_fuzzy import find_best_character_match
+from llm_utils import extract_completion_text
 
 def handle(args, context):
     """
@@ -132,7 +133,7 @@ def handle(args, context):
             max_tokens=512
         )
 
-        reply = response["choices"][0]["message"]["content"]
+        reply = extract_completion_text(response)
 
         # Store character response
         chat_history.add_message(session_id, "character", reply)
