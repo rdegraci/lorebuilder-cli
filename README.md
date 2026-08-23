@@ -38,7 +38,7 @@ On first run, `app.yaml` and `.env` are created automatically from the example f
 - Type `help` or `help <command>` inside the CLI.
 - Example command categories:
   - **Lore:** `add_lore`, `generate_lore`, `store_generated_lore`, `query_lore`, `list_all_lore`, `delete_lore`
-  - **Characters:** `chat_to`, `list_characters`
+  - **Characters:** `chat_to`, `chat_with`, `list_characters`
   - **System:** `help`, `exit`
 
 ---

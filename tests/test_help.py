@@ -47,4 +47,5 @@ def test_print_command_menu_lists_registered_commands(capture_rprint):
     assert "Available Commands" in output
     assert "add_lore" in output
     assert "chat_to" in output
+    assert "chat_with" in output
     assert "help <command>" in output

@@ -20,6 +20,7 @@ LORE_COMMANDS = [
 ]
 CHAR_COMMANDS = [
     "chat_to",
+    "chat_with",
     "list_characters",
 ]
 SYSTEM_COMMANDS = ["help", "exit"]
@@ -106,12 +107,25 @@ COMMAND_HELP = {
             'chat_to "The Mage of the Lake" Who visits the lake at midnight?',
         ],
     },
+    "chat_with": {
+        "summary": "Enter a multi-turn chat session with a character",
+        "usage": "chat_with <character_name>",
+        "description": (
+            "Start an interactive conversation loop with a character mentioned in world lore. "
+            "Character replies appear as Character>> and your input uses You>>. "
+            "Conversation history is saved per character. Type end_chat to return to the main menu."
+        ),
+        "examples": [
+            "chat_with Mara",
+            'chat_with "The Mage of the Lake"',
+        ],
+    },
     "list_characters": {
         "summary": "List characters found in lore",
         "usage": "list_characters",
         "description": (
             "Show person names extracted from all saved lore using spaCy NER. "
-            "Use chat_to to converse with any listed character."
+            "Use chat_to for a single message or chat_with for a conversation."
         ),
         "examples": [
             "list_characters",

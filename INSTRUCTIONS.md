@@ -68,14 +68,18 @@ Add more lore about characters or create new individuals via `add_lore` or LLM g
 ---
 
 ## 7. Chat With Characters
-Begin a conversation with any extracted or manually-remembered character name:
+
+Send a single message with `chat_to`, or start a multi-turn session with `chat_with`:
 
 ```bash
 chat_to Mara Who rules Ardelune?
-chat_to The Mage of the Lake What happens at midnight?
+chat_with Mara
+You>> Who rules Ardelune?
+Mara>> The council of scholars holds power in Ardelune.
+You>> end_chat
 ```
 
-Converse with the character, with all past dialogue remembered per character and session.
+Conversation history is saved per character. Type `end_chat` to leave a `chat_with` session.
 
 ---
 
