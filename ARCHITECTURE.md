@@ -35,7 +35,7 @@ LoreBuilder is a modular CLI application for RAG-powered conversational world-bu
 - Handles help, error, and info messages consistently (via cli_utils.py)
 
 ### d) commands/ (Command Modules)
-- Each handler implements a single CLI entrypoint (e.g., add_lore, chat_as, list_characters)
+- Each handler implements a single CLI entrypoint (e.g., add_lore, chat_to, list_characters)
 - All command handlers are centrally registered in commands/__init__.py
 - Dynamic help and menu loading—only active and maintained commands appear in UI/menus (`help` relies on docstrings)
 - All deprecated modules such as locations.py and npcs.py are now entirely decoupled and safe to remove
@@ -47,7 +47,7 @@ LoreBuilder is a modular CLI application for RAG-powered conversational world-bu
 - **World/Lore:** Managed exclusively by ChromaDB + embeddings for retrieval, and always in sync for entity extraction (characters).
 - **Chat:** All messages are routed through core SQLite persistence for multi-turn, sessionized replay/support.
 - **LLM:** Only via the LoreService class (no scattered API keys/configs)
-- **Character/Entity Extraction:** spaCy and rapidfuzz, invoked on world/lore data and user messaging to keep chat_as flexible and robust (supports quoted, fuzzy, full/partial, and multi-word character names)
+- **Character/Entity Extraction:** spaCy and rapidfuzz, invoked on world/lore data and user messaging to keep chat_to flexible and robust (supports quoted, fuzzy, full/partial, and multi-word character names)
 
 ---
 

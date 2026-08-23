@@ -1,8 +1,8 @@
 
 """
-commands/chat_as.py
+commands/chat_to.py
 
-Handles the chat_as CLI command for LoreBuilder after refactoring.
+Handles the chat_to CLI command for LoreBuilder after refactoring.
 """
 import traceback
 from rich import print as rprint
@@ -14,7 +14,7 @@ from llm_utils import extract_completion_text
 
 def handle(args, context):
     """
-    Handles the chat_as <character> <message> CLI command.
+    Handles the chat_to <character> <message> CLI command.
 
     Attempts fuzzy matching of the provided character_name against context['characters_in_lore'],
     using case-insensitive match, basic name variations, and similarity scoring.
@@ -33,7 +33,7 @@ def handle(args, context):
         Handles smart parsing for quoted multi-word character names with both single/double quotes.
         """
         if not args or len(args) < 2:
-            return None, None, "[red]Usage: chat_as <character_name> <user_message>"
+            return None, None, "[red]Usage: chat_to <character_name> <user_message>"
 
         first_arg = args[0]
         if (first_arg.startswith('"') or first_arg.startswith("'")):
@@ -67,14 +67,14 @@ def handle(args, context):
 
     # --- SAFETY CHECK for lore._lore_service ---
     if getattr(lore, "_lore_service", None) is None:
-        rprint("[red]Error: Lore service is not initialized! Cannot proceed with chat_as.")
+        rprint("[red]Error: Lore service is not initialized! Cannot proceed with chat_to.")
         return
 
     character_name, user_message, parse_error = parse_character_and_message(args)
     if parse_error:
         rprint(parse_error)
     if not character_name or not user_message:
-        rprint("[red]Usage: chat_as <character_name> <user_message>")
+        rprint("[red]Usage: chat_to <character_name> <user_message>")
         return
 
     # --- Character presence check for lore world with fuzzy matching ---
@@ -144,5 +144,4 @@ def handle(args, context):
     except Exception as e:
         traceback.print_exc()
         rprint(f"[red]Error during LLM chat: {str(e)}")
-
 

@@ -19,7 +19,7 @@ LORE_COMMANDS = [
     "delete_lore",
 ]
 CHAR_COMMANDS = [
-    "chat_as",
+    "chat_to",
     "list_characters",
 ]
 SYSTEM_COMMANDS = ["help", "exit"]
@@ -93,17 +93,17 @@ COMMAND_HELP = {
             "delete_lore 482913",
         ],
     },
-    "chat_as": {
-        "summary": "Chat in character with lore-aware context",
-        "usage": "chat_as <character_name> <message>",
+    "chat_to": {
+        "summary": "Chat with a character using lore-aware context",
+        "usage": "chat_to <character_name> <message>",
         "description": (
-            "Start or continue a conversation as a character mentioned in world lore. "
+            "Start or continue a conversation with a character mentioned in world lore. "
             "Supports fuzzy name matching and quoted multi-word names. "
             "Conversation history is saved per character in SQLite."
         ),
         "examples": [
-            'chat_as Mara What do you know about the Order of Shadows?',
-            'chat_as "The Mage of the Lake" Who visits the lake at midnight?',
+            'chat_to Mara What do you know about the Order of Shadows?',
+            'chat_to "The Mage of the Lake" Who visits the lake at midnight?',
         ],
     },
     "list_characters": {
@@ -111,7 +111,7 @@ COMMAND_HELP = {
         "usage": "list_characters",
         "description": (
             "Show person names extracted from all saved lore using spaCy NER. "
-            "Use chat_as to converse with any listed character."
+            "Use chat_to to converse with any listed character."
         ),
         "examples": [
             "list_characters",
@@ -127,7 +127,7 @@ COMMAND_HELP = {
         "examples": [
             "help",
             "help add_lore",
-            "help chat_as",
+            "help chat_to",
         ],
     },
     "exit": {

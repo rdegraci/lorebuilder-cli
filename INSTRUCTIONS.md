@@ -67,15 +67,15 @@ Add more lore about characters or create new individuals via `add_lore` or LLM g
 
 ---
 
-## 7. Chat As Characters
-Begin an in-character conversation session using any extracted or manually-remembered character name:
+## 7. Chat With Characters
+Begin a conversation with any extracted or manually-remembered character name:
 
 ```bash
-chat_as Mara
-chat_as The Mage of the Lake
+chat_to Mara Who rules Ardelune?
+chat_to The Mage of the Lake What happens at midnight?
 ```
 
-Converse as the character or with the character, with all past dialogue remembered per character and session.
+Converse with the character, with all past dialogue remembered per character and session.
 
 ---
 
