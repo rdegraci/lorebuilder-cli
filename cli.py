@@ -25,7 +25,7 @@ def start_cli(context, verbose=False):
         verbose (bool): Enable verbose output (prints tracebacks and debug if True).
     """
     print_banner()
-    print_command_menu()
+    print_command_menu(COMMANDS_REGISTRY)
     
     cli_info("Ready! Enter commands below:")
 
@@ -53,14 +53,9 @@ def start_cli(context, verbose=False):
             # Help command support
             if canonical_command == "help":
                 if not args:
-                    print_command_menu()
+                    print_command_menu(COMMANDS_REGISTRY)
                 else:
-                    cmd_to_help = args[0]
-                    handler = COMMANDS_REGISTRY.get(cmd_to_help)
-                    if handler:
-                        print_command_help(cmd_to_help, handler)
-                    else:
-                        cli_error(f"No help found: unknown command '{cmd_to_help}'.")
+                    print_command_help(args[0], COMMANDS_REGISTRY)
                 continue
 
             # Find the handler in the registry
