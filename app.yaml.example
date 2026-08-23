@@ -1,0 +1,16 @@
+chromadb_path: ./chromadb
+embedding_model: all-MiniLM-L6-v2
+
+llm_provider: openai/gpt-4o-mini
+lore_llm_model: openai/gpt-4o-mini
+
+prompt_template: >
+  You are a creative worldbuilder. Use this existing lore as context:
+  {context}
+
+chat_prompt_template: >
+  You are {character_name}, a character in a fictional world.
+  Stay in character. Use this lore as context:
+  {context}
+
+cli_history_path: .lorebuilder_cli_history
