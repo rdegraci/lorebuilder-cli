@@ -1,8 +1,8 @@
-
 """
 help.py - Banner and command/help menu utilities for CLI
 """
 from rich import print as rprint
+from rich.text import Text
 
 BANNER = (
     "[bold cyan]╔═════════════════════════════════════════════════════════╗\n"
@@ -179,7 +179,7 @@ def print_command_menu(commands_registry=None):
         for line in lines:
             rprint(f"  [white]{line}[/white]")
 
-    rprint("\n[dim]Type 'help <command>' for details. Example: help add_lore[/dim]")
+    rprint(Text("Type 'help <command>' for details. Example: help add_lore", style="dim"))
 
 
 def print_command_help(command: str, commands_registry=None):
