@@ -5,6 +5,7 @@ bootstrap.py
 App initialization module for LoreBuilder CLI.
 Sets up config, env, embedding, vector DB, chat DB, and modules.
 """
+import shutil
 import yaml
 import chromadb
 from chromadb.utils import embedding_functions
@@ -15,6 +16,57 @@ import chat_history
 import lore
 import lore_entities
 from lore_entities import extract_character_names_from_lore
+from constants import CONFIG_FILE, ENV_FILE
+
+CONFIG_EXAMPLE = "app.yaml.example"
+ENV_EXAMPLE = ".env.example"
+ENV_API_KEY_PLACEHOLDER = "your-model-api-key-here"
+
+
+def _create_file_from_example(target: str, example: str, fallback_content: str) -> None:
+    """Create target file from example template, or fallback content if example is missing."""
+    if os.path.exists(example):
+        shutil.copyfile(example, target)
+    else:
+        with open(target, "w") as f:
+            f.write(fallback_content)
+    rprint(f"[green]Created {target}[/green]")
+
+
+def _ensure_env_file() -> None:
+    """Create .env from .env.example on first run if it does not exist."""
+    if os.path.exists(ENV_FILE):
+        return
+    _create_file_from_example(
+        ENV_FILE,
+        ENV_EXAMPLE,
+        f"LLM_API_KEY={ENV_API_KEY_PLACEHOLDER}\n",
+    )
+    rprint(f"[yellow]Edit {ENV_FILE} and set LLM_API_KEY before using LLM features.[/yellow]")
+
+
+def _ensure_config_file() -> None:
+    """Create app.yaml from app.yaml.example on first run if it does not exist."""
+    if os.path.exists(CONFIG_FILE):
+        return
+    _create_file_from_example(
+        CONFIG_FILE,
+        CONFIG_EXAMPLE,
+        (
+            "chromadb_path: ./chromadb\n"
+            "embedding_model: all-MiniLM-L6-v2\n"
+            "llm_provider: openai/gpt-4o-mini\n"
+            "lore_llm_model: openai/gpt-4o-mini\n"
+            "prompt_template: >\n"
+            "  You are a creative worldbuilder. Use this existing lore as context:\n"
+            "  {context}\n"
+            "chat_prompt_template: >\n"
+            "  You are {character_name}, a character in a fictional world.\n"
+            "  Stay in character. Use this lore as context:\n"
+            "  {context}\n"
+            "cli_history_path: .lorebuilder_cli_history\n"
+        ),
+    )
 
 
 def initialize_app():
@@ -23,11 +75,13 @@ def initialize_app():
     Returns a context dict for use by the CLI.
     """
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    _ensure_env_file()
+    _ensure_config_file()
     load_dotenv()
     rprint("[dim]Loading configuration and environment...[/dim]")
 
     # Load config
-    with open("app.yaml") as f:
+    with open(CONFIG_FILE) as f:
         config = yaml.safe_load(f)
     if "lore_llm_model" not in config:
         config["lore_llm_model"] = config.get("llm_provider", "openai/gpt-4o-mini")
@@ -35,9 +89,11 @@ def initialize_app():
         config["lore_llm_system_prompt"] = config.get("prompt_template", "You are a creative worldbuilder.")
 
     # Environmental config
-    if not os.getenv("LLM_API_KEY"):
-        raise EnvironmentError("LLM_API_KEY not set in .env or environment.")
     llm_api_key = os.getenv("LLM_API_KEY")
+    if not llm_api_key or llm_api_key == ENV_API_KEY_PLACEHOLDER:
+        raise EnvironmentError(
+            f"LLM_API_KEY not set. Edit {ENV_FILE} and add your API key."
+        )
 
     # Embedding init
     embedder = embedding_functions.SentenceTransformerEmbeddingFunction(

@@ -26,18 +26,10 @@ git clone https://github.com/yourusername/lorebuilder-cli.git
 cd lorebuilder-cli
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
-cp app.yaml.example app.yaml
-cp .env.example .env
-```
-
-- Edit `.env` and set your `LLM_API_KEY`.
-- Edit `app.yaml` if you want to change models, prompts, or storage paths.
-
-Run the app:
-
-```bash
 python app.py
 ```
+
+On first run, `app.yaml` and `.env` are created automatically from the example files. Edit `.env` and set your `LLM_API_KEY` before using LLM features. Edit `app.yaml` if you want to change models, prompts, or storage paths.
 
 ---
 
@@ -62,9 +54,9 @@ commands/            # Modular command handlers
 lore.py              # LoreService logic
 lore_entities.py     # Entity extraction and NLP
 chat_history.py      # Chat/session tracking
-app.yaml             # Configuration (copy from app.yaml.example)
-app.yaml.example     # Example configuration
-.env                 # API keys (copy from .env.example; never commit)
+app.yaml             # Configuration (auto-created on first run)
+app.yaml.example     # Example configuration template
+.env                 # API keys (auto-created on first run; never commit)
 .env.example         # Example API key file
 ARCHITECTURE.md      # Dev architecture doc
 ```
