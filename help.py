@@ -23,6 +23,7 @@ CHAR_COMMANDS = [
     "chat_to",
     "chat_with",
     "reset_chat",
+    "rename_character",
     "list_characters",
 ]
 SYSTEM_COMMANDS = ["help", "exit"]
@@ -136,12 +137,26 @@ COMMAND_HELP = {
             'reset_chat "The Mage of the Lake"',
         ],
     },
+    "rename_character": {
+        "summary": "Set a display name for a lore-extracted character",
+        "usage": "rename_character <old_name> <new_name>",
+        "description": (
+            "Assign a preferred chat and list name for a character found in lore. "
+            "Lore text is not changed; both the lore name and display name are used "
+            "when retrieving context for chat. Existing chat history is kept under the new name."
+        ),
+        "examples": [
+            "rename_character Warlord Valeria",
+            'rename_character "The Warlord" Valeria',
+        ],
+    },
     "list_characters": {
         "summary": "List characters found in lore",
         "usage": "list_characters",
         "description": (
             "Show person names extracted from all saved lore using spaCy NER. "
-            "Use chat_to for a single message, chat_with for a conversation, or reset_chat to clear history."
+            "Use chat_to for a single message, chat_with for a conversation, "
+            "rename_character to change a display name, or reset_chat to clear history."
         ),
         "examples": [
             "list_characters",

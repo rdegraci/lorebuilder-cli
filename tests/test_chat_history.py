@@ -33,6 +33,19 @@ def test_add_message_and_get_history(chat_service):
     ]
 
 
+def test_rename_session_character_updates_session_key(chat_service):
+    session_id = chat_service.get_or_create_session("Warlord")
+    chat_service.add_message(session_id, "user", "Hello")
+
+    updated = chat_service.rename_session_character("Warlord", "Valeria")
+
+    assert updated == 1
+    assert chat_service.list_sessions("Warlord") == []
+    sessions = chat_service.list_sessions("Valeria")
+    assert len(sessions) == 1
+    assert sessions[0][0] == session_id
+
+
 def test_reset_history_clears_messages_but_keeps_session(chat_service):
     session_id = chat_service.get_or_create_session("Mara")
     chat_service.add_message(session_id, "user", "Hello")

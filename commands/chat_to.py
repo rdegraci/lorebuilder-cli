@@ -38,6 +38,11 @@ def handle(args, context):
     if not character_to_use:
         return
 
-    reply = send_message_and_get_reply_safe(character_to_use, user_message)
+    lore_characters = set(context.get("characters_in_lore", []))
+    reply = send_message_and_get_reply_safe(
+        character_to_use,
+        user_message,
+        characters_in_lore=lore_characters,
+    )
     if reply is not None:
         print_character_reply(character_to_use, reply)

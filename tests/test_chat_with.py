@@ -34,12 +34,12 @@ def test_chat_with_enters_loop_and_exits_on_end_chat(
     monkeypatch.setattr(
         chat_with,
         "generate_opening_greeting_safe",
-        lambda character: "Hello, traveler.",
+        lambda character, **kwargs: "Hello, traveler.",
     )
     monkeypatch.setattr(
         chat_with,
         "send_message_and_get_reply_safe",
-        lambda character, message: f"Reply to: {message}",
+        lambda character, message, **kwargs: f"Reply to: {message}",
     )
 
     prompts = iter(["Hello there", "end_chat"])
@@ -74,7 +74,7 @@ def test_chat_with_supports_multi_word_character_names(
         lambda character: captured.setdefault("character", character) or 1,
     )
     monkeypatch.setattr(chat_common.chat_history, "get_history", lambda session_id, limit=1: [])
-    monkeypatch.setattr(chat_with, "generate_opening_greeting_safe", lambda character: "Greetings.")
+    monkeypatch.setattr(chat_with, "generate_opening_greeting_safe", lambda character, **kwargs: "Greetings.")
     monkeypatch.setattr(
         chat_with,
         "PromptSession",
@@ -107,7 +107,7 @@ def test_chat_with_shows_recent_history(initialized_lore, capture_rprint, monkey
     monkeypatch.setattr(
         chat_with,
         "generate_opening_greeting_safe",
-        lambda character: "Should not be called",
+        lambda character, **kwargs: "Should not be called",
     )
     monkeypatch.setattr(
         chat_with,
@@ -136,7 +136,7 @@ def test_chat_with_generates_greeting_for_new_session(
     monkeypatch.setattr(
         chat_with,
         "generate_opening_greeting_safe",
-        lambda character: "Welcome back to the lake.",
+        lambda character, **kwargs: "Welcome back to the lake.",
     )
     monkeypatch.setattr(
         chat_with,
@@ -158,7 +158,7 @@ def test_chat_with_help_inside_loop(initialized_lore, capture_rprint, monkeypatc
 
     monkeypatch.setattr(chat_common.chat_history, "get_or_create_session", lambda character: 1)
     monkeypatch.setattr(chat_common.chat_history, "get_history", lambda session_id, limit=1: [])
-    monkeypatch.setattr(chat_with, "generate_opening_greeting_safe", lambda character: None)
+    monkeypatch.setattr(chat_with, "generate_opening_greeting_safe", lambda character, **kwargs: None)
     prompts = iter(["help", "end_chat"])
     monkeypatch.setattr(
         chat_with,

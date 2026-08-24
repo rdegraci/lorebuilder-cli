@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 import os
 from rich import print as rprint
 import chat_history
+import character_aliases
 import lore
 import lore_entities
 from lore_entities import extract_character_names_from_lore
@@ -106,6 +107,7 @@ def initialize_app():
 
     # Chat DB
     chat_history.initialize_db()
+    character_aliases.initialize_db()
 
     # Module dependency injection
     rprint("[dim]Initializing modules...[/dim]")

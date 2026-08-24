@@ -264,7 +264,26 @@ class ChatHistoryService:
                 ]
         except sqlite3.Error as e:
             raise sqlite3.Error(f"{ERROR_HISTORY_EXPORT_FAILED} {session_id}: {e}")
-    
+
+    def rename_session_character(self, old_character: str, new_character: str) -> int:
+        """Rename a chat session's character key. Returns number of rows updated."""
+        if not old_character.strip() or not new_character.strip():
+            raise ValueError(ERROR_EMPTY_CHARACTER_NAME)
+
+        try:
+            with self.get_connection() as conn:
+                cur = conn.cursor()
+                cur.execute(
+                    "UPDATE chat_sessions SET character=? WHERE character=?",
+                    (new_character.strip(), old_character.strip()),
+                )
+                conn.commit()
+                return cur.rowcount
+        except sqlite3.Error as e:
+            raise sqlite3.Error(
+                f"{ERROR_SESSION_OPERATION_FAILED} '{old_character}' -> '{new_character}': {e}"
+            )
+
     def list_sessions(self, character: Optional[str] = None) -> List[Tuple[int, str, str]]:
         """List all chat sessions, optionally filtered by character.
         
@@ -337,6 +356,10 @@ def export_history(session_id: int) -> List[Dict]:
 def list_sessions(character: Optional[str] = None) -> List[Tuple[int, str, str]]:
     """List all chat sessions, optionally filtered by character. Returns (id, character, last_active)."""
     return _chat_history_service.list_sessions(character)
+
+def rename_session_character(old_character: str, new_character: str) -> int:
+    """Rename a chat session's character key. Returns number of rows updated."""
+    return _chat_history_service.rename_session_character(old_character, new_character)
 
 # Ensure tables exist if script is run
 if __name__ == "__main__":

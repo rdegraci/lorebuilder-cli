@@ -54,11 +54,15 @@ def handle(args, context):
         "Type end_chat to return to the main menu."
     )
 
+    lore_characters = set(context.get("characters_in_lore", []))
     history = chat_history.get_history(session_id, limit=1)
     if history:
         print_recent_history(character_to_use, session_id)
     else:
-        greeting = generate_opening_greeting_safe(character_to_use)
+        greeting = generate_opening_greeting_safe(
+            character_to_use,
+            characters_in_lore=lore_characters,
+        )
         if greeting is not None:
             print_character_reply(character_to_use, greeting)
 
@@ -83,6 +87,10 @@ def handle(args, context):
             )
             continue
 
-        reply = send_message_and_get_reply_safe(character_to_use, user_message)
+        reply = send_message_and_get_reply_safe(
+            character_to_use,
+            user_message,
+            characters_in_lore=lore_characters,
+        )
         if reply is not None:
             print_character_reply(character_to_use, reply)

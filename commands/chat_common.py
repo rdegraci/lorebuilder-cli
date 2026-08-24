@@ -10,9 +10,9 @@ import litellm
 from rich import print as rprint
 
 import chat_history
+import character_aliases
 import lore
 from llm_utils import extract_completion_text
-from lore_fuzzy import find_best_character_match
 
 
 def check_lore_service(command_name: str) -> bool:
@@ -55,6 +55,60 @@ def parse_character_from_args(args: List[str]) -> Tuple[Optional[str], Optional[
     return " ".join(args).strip(), None
 
 
+def _take_character_name(args: List[str]) -> Tuple[Optional[str], List[str]]:
+    """Parse one character name from the front of args and return the remainder."""
+    if not args:
+        return None, []
+
+    first_arg = args[0]
+    if first_arg.startswith('"') or first_arg.startswith("'"):
+        opening_quote = first_arg[0]
+        char_name_parts = []
+        part = first_arg[1:]
+        if part:
+            char_name_parts.append(part)
+
+        for i in range(1, len(args)):
+            if args[i].endswith(opening_quote):
+                if len(args[i]) > 1:
+                    char_name_parts.append(args[i][:-1])
+                return " ".join(char_name_parts).strip(), args[i + 1 :]
+            char_name_parts.append(args[i])
+
+        return " ".join(char_name_parts).strip(), []
+
+    return first_arg.strip(), args[1:]
+
+
+def parse_two_character_names(args: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    """
+    Parse two character names from CLI args for rename_character.
+
+    Returns:
+        (old_name, new_name, warning_message)
+    """
+    if len(args) < 2:
+        return None, None, None
+
+    args = list(args)
+    if args[0].startswith('"') or args[0].startswith("'"):
+        old_name, remainder = _take_character_name(args)
+        if not old_name or not remainder:
+            return None, None, None
+
+        new_name, extra = _take_character_name(remainder)
+        if not new_name:
+            return None, None, None
+
+        warning = "[yellow]Warning: Extra arguments ignored." if extra else None
+        return old_name, new_name, warning
+
+    if len(args) == 2:
+        return args[0].strip(), args[1].strip(), None
+
+    return " ".join(args[:-1]).strip(), args[-1].strip(), None
+
+
 def parse_character_and_message(args: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Parse character name and message for chat_to.
@@ -90,18 +144,36 @@ def parse_character_and_message(args: List[str]) -> Tuple[Optional[str], Optiona
     return character_name, user_message, None
 
 
+def build_lore_query(
+    display_name: str,
+    extra: str,
+    characters_in_lore: Set[str],
+) -> str:
+    """Build a lore search query using display and underlying lore names."""
+    aliases = character_aliases.get_all()
+    terms = character_aliases.lore_search_terms(display_name, characters_in_lore, aliases)
+    parts = terms + ([extra] if extra else [])
+    return " ".join(part for part in parts if part)
+
+
 def resolve_character(
     character_name: str,
     characters_in_lore: Set[str],
 ) -> Optional[str]:
     """
-    Fuzzy-match a character name against lore characters.
+    Fuzzy-match a character name against lore characters and aliases.
 
-    Returns the resolved character name, or None after printing errors.
+    Returns the resolved display/chat name, or None after printing errors.
     """
-    best_match, close_matches = find_best_character_match(character_name, characters_in_lore)
+    aliases = character_aliases.get_all()
+    lore_characters = set(characters_in_lore)
+    display_name, close_matches = character_aliases.resolve_display_name(
+        character_name,
+        lore_characters,
+        aliases,
+    )
 
-    if not best_match:
+    if not display_name:
         rprint(f"[red]Character '{character_name}' is not mentioned in any world lore.")
         if close_matches:
             suggestions = ", ".join(close_matches)
@@ -109,10 +181,10 @@ def resolve_character(
         rprint("Use 'list_characters' to see known characters.")
         return None
 
-    if best_match.strip().lower() != character_name.strip().lower():
-        rprint(f"[yellow]Interpreting '{character_name}' as '{best_match}' for this session.")
+    if display_name.strip().lower() != character_name.strip().lower():
+        rprint(f"[yellow]Interpreting '{character_name}' as '{display_name}' for this session.")
 
-    return best_match
+    return display_name
 
 
 def format_character_line(character_name: str, message: str) -> str:
@@ -140,14 +212,20 @@ def print_recent_history(character_name: str, session_id: int, limit: int = 4) -
     rprint("")
 
 
-def send_message_and_get_reply(character_name: str, user_message: str) -> str:
+def send_message_and_get_reply(
+    character_name: str,
+    user_message: str,
+    characters_in_lore: Optional[Set[str]] = None,
+) -> str:
     """
     Store the user message, call the LLM, store the reply, and return reply text.
     """
     session_id = chat_history.get_or_create_session(character_name)
     chat_history.add_message(session_id, "user", user_message)
 
-    relevant_lore = lore.query_lore_internal(f"{character_name} {user_message}", 3)
+    lore_chars = set(characters_in_lore or [])
+    lore_query = build_lore_query(character_name, user_message, lore_chars)
+    relevant_lore = lore.query_lore_internal(lore_query, 3)
     messages = chat_history.get_history(session_id)
     context_str = (
         "\n\n".join(relevant_lore)
@@ -181,17 +259,28 @@ def send_message_and_get_reply(character_name: str, user_message: str) -> str:
     return reply
 
 
-def send_message_and_get_reply_safe(character_name: str, user_message: str) -> Optional[str]:
+def send_message_and_get_reply_safe(
+    character_name: str,
+    user_message: str,
+    characters_in_lore: Optional[Set[str]] = None,
+) -> Optional[str]:
     """Call send_message_and_get_reply and print errors instead of raising."""
     try:
-        return send_message_and_get_reply(character_name, user_message)
+        return send_message_and_get_reply(
+            character_name,
+            user_message,
+            characters_in_lore=characters_in_lore,
+        )
     except Exception as e:
         traceback.print_exc()
         rprint(f"[red]Error during LLM chat: {str(e)}")
         return None
 
 
-def generate_opening_greeting(character_name: str) -> Optional[str]:
+def generate_opening_greeting(
+    character_name: str,
+    characters_in_lore: Optional[Set[str]] = None,
+) -> Optional[str]:
     """
     Generate an in-character greeting when starting a new conversation.
 
@@ -201,7 +290,9 @@ def generate_opening_greeting(character_name: str) -> Optional[str]:
     if chat_history.get_history(session_id, limit=1):
         return None
 
-    relevant_lore = lore.query_lore_internal(character_name, 3)
+    lore_chars = set(characters_in_lore or [])
+    lore_query = build_lore_query(character_name, "", lore_chars)
+    relevant_lore = lore.query_lore_internal(lore_query, 3)
     context_str = (
         "\n\n".join(relevant_lore)
         if relevant_lore
@@ -236,10 +327,16 @@ def generate_opening_greeting(character_name: str) -> Optional[str]:
     return reply
 
 
-def generate_opening_greeting_safe(character_name: str) -> Optional[str]:
+def generate_opening_greeting_safe(
+    character_name: str,
+    characters_in_lore: Optional[Set[str]] = None,
+) -> Optional[str]:
     """Call generate_opening_greeting and print errors instead of raising."""
     try:
-        return generate_opening_greeting(character_name)
+        return generate_opening_greeting(
+            character_name,
+            characters_in_lore=characters_in_lore,
+        )
     except Exception as e:
         traceback.print_exc()
         rprint(f"[red]Error generating greeting: {str(e)}")

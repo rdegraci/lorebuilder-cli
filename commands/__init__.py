@@ -10,6 +10,7 @@ from .store_generated_lore import handle as store_generated_lore
 from .chat_to import handle as chat_to
 from .chat_with import handle as chat_with
 from .reset_chat import handle as reset_chat
+from .rename_character import handle as rename_character
 from .list_characters import handle as list_characters
 
 # Import handlers directly from the modules
@@ -23,6 +24,7 @@ COMMANDS_REGISTRY = {
     "chat_to": chat_to,
     "chat_with": chat_with,
     "reset_chat": reset_chat,
+    "rename_character": rename_character,
     "list_characters": list_characters,
 
     # Commands from lore.py
