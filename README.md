@@ -23,7 +23,7 @@
 ## Quickstart
 
 ```bash
-git clone https://github.com/yourusername/lorebuilder-cli.git
+git clone https://github.com/rdegraci/lorebuilder-cli.git
 cd lorebuilder-cli
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
@@ -133,7 +133,7 @@ Pull requests welcome! Please open issues for bugs or feature requests.
 - Rodney Degracia [https://rodneydegracia.com](https://rodneydegracia.com)
 - Email: rdegraci@gmail.com
 - Linked In: [https://www.linkedin.com/in/rdegraci/](https://www.linkedin.com/in/rdegraci/)
-- GitHub Issues: [https://github.com/yourusername/lorebuilder-cli/issues](https://github.com/yourusername/lorebuilder-cli/issues)
+- GitHub Issues: [https://github.com/rdegraci/lorebuilder-cli/issues](https://github.com/rdegraci/lorebuilder-cli/issues)
 
 ---
 
